@@ -1,0 +1,7 @@
+{
+  "name": "spread",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular-standalone"
+}
