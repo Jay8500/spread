@@ -1,18 +1,58 @@
 import { Component, OnInit } from '@angular/core';
 import { IonApp, IonRouterOutlet } from '@ionic/angular/standalone';
 import { PushNotifications } from '@capacitor/push-notifications';
+import { Router } from '@angular/router'; // Add this
+import { Supabase } from './services/supabase';
+import { Capacitor } from '@capacitor/core';
 @Component({
   selector: 'app-root',
   templateUrl: 'app.component.html',
   imports: [IonApp, IonRouterOutlet],
 })
 export class AppComponent implements OnInit {
+  constructor(private supabase: Supabase, private router: Router) {}
   ngOnInit() {
+    this.listenToAuth(); // Start watching the user status
     this.setupPush();
   }
 
+  listenToAuth() {
+    this.supabase.authChanges((event: any, session: any) => {
+      if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
+        // 1. Check the ACTUAL browser URL
+        const currentPath = window.location.pathname;
+
+        // 2. LOGIC: If the user is ALREADY inside the tabs or chat, DON'T move them.
+        // We only move them to /tabs/tab1 if they are on /login or /
+        if (
+          currentPath === '/login' ||
+          currentPath === '/' ||
+          currentPath === ''
+        ) {
+          console.log('User is at login/root, moving to Tab 1');
+          this.router.navigateByUrl('/tabs/tab1', { replaceUrl: true });
+        } else {
+          console.log(
+            'User is already at:',
+            currentPath,
+            'keeping them there.'
+          );
+        }
+      }
+
+      if (event === 'SIGNED_OUT') {
+        this.router.navigateByUrl('/login', { replaceUrl: true });
+      }
+    });
+  }
+
   async setupPush() {
-    // Request permission to use push notifications
+    // 3. Add this check to stop the "Plugin not implemented" error on Web
+    if (Capacitor.getPlatform() === 'web') {
+      console.log('Push Notifications skipped: Running on Web');
+      return;
+    }
+
     let permStatus = await PushNotifications.checkPermissions();
 
     if (permStatus.receive === 'prompt') {
@@ -20,18 +60,17 @@ export class AppComponent implements OnInit {
     }
 
     if (permStatus.receive !== 'granted') {
-      throw new Error('User denied permissions!');
+      return;
     }
 
-    // Register with Apple / Google for a token
     await PushNotifications.register();
 
-    // Listen for the registration token (You'll need this to target specific friends)
     PushNotifications.addListener('registration', (token) => {
       console.log('Push registration success, token: ' + token.value);
+      // This saves the token to your Supabase profiles table
+      this.supabase.updateFcmToken(token.value);
     });
 
-    // What to do when a notification arrives while the app is open
     PushNotifications.addListener(
       'pushNotificationReceived',
       (notification) => {

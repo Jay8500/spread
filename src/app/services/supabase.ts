@@ -164,4 +164,23 @@ export class Supabase {
     });
     return { data, error };
   }
+
+  // 1. The Listener that fixes the "Stuck on Loading" issue
+  authChanges(callback: (event: any, session: any) => void) {
+    return this.supabase.auth.onAuthStateChange(callback);
+  }
+
+  // 2. The function to save the Notification Token to the database
+  async updateFcmToken(token: string) {
+    const { data: { user } } = await this.supabase.auth.getUser();
+    if (!user) return;
+
+    const { error } = await this.supabase
+      .from('profiles')
+      .update({ fcm_token: token }) // Make sure your profiles table has this column!
+      .eq('id', user.id);
+
+    if (error) console.error('Error saving FCM token:', error);
+    else console.log('FCM token updated in DB');
+  }
 }

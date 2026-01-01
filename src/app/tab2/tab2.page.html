@@ -6,14 +6,39 @@
 
 <ion-content color="light">
   <div class="ion-text-center ion-padding profile-top-section">
-    <ion-avatar class="profile-avatar">
-      <div class="large-avatar-text">{{ getInitials(userProfile?.username) }}</div>
-    </ion-avatar>
-    
+    <div class="avatar-container" (click)="fileInput.click()">
+      <ion-avatar class="profile-avatar">
+        @if (userProfile?.avatar_url) {
+        <img [src]="userProfile.avatar_url" />
+        } @else {
+        <div class="large-avatar-text">
+          {{ getInitials(userProfile?.username) }}
+        </div>
+        }
+      </ion-avatar>
+
+      @if (isUploading) {
+      <div class="upload-overlay">
+        <ion-spinner name="crescent" color="light"></ion-spinner>
+      </div>
+      }
+
+      <div class="edit-icon">
+        <ion-icon name="camera"></ion-icon>
+      </div>
+    </div>
+
+    <input
+      type="file"
+      #fileInput
+      style="display: none"
+      (change)="onFileSelected($event)"
+      accept="image/png, image/jpeg"
+    />
+
     <h2 class="username-display">@{{ userProfile?.username || 'user' }}</h2>
     <ion-note>Spread Chat Member</ion-note>
   </div>
-
   <ion-list [inset]="true" class="account-details-list">
     <ion-list-header>
       <ion-label color="primary">Account Details</ion-label>
@@ -45,7 +70,7 @@
   </ion-list>
 
   <div class="ion-padding ion-text-center">
-    <p style="font-size: 0.8rem; color: #888;">
+    <p style="font-size: 0.8rem; color: #888">
       This profile is private. Only you can see these details.
     </p>
   </div>

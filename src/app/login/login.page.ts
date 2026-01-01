@@ -31,7 +31,7 @@ import { Supabase } from '../services/supabase';
     // IonText,
     IonButton,
     IonInput,
-    IonLoading,
+    // IonLoading,
     IonSpinner,
   ],
 })
@@ -54,48 +54,72 @@ export class LoginPage {
 
     try {
       if (this.isSignUp) {
-        // 1. SIGN UP
+        // --- SIGN UP ---
         const { data, error } = await this.supabase.client.auth.signUp({
           email: this.email,
           password: this.password,
-          options: {
-            data: { username: this.username }, // Store username in metadata
-          },
+          options: { data: { username: this.username } },
         });
 
         if (error) throw error;
 
-        // 2. CREATE PROFILE RECORD (CRITICAL FOR CHAT)
         if (data.user) {
-          const { error: profileError } = await this.supabase.client
-            .from('profiles')
-            .insert([
-              {
-                id: data.user.id,
-                username: this.username.toLowerCase(),
-                email: this.email,
-              },
-            ]);
-
-          if (profileError)
-            console.error('Profile creation error:', profileError);
+          await this.supabase.client.from('profiles').insert([
+            {
+              id: data.user.id,
+              username: this.username.toLowerCase(),
+              email: this.email,
+            },
+          ]);
         }
 
-        alert('Account created! Please login.');
-        this.isSignUp = false; // Switch to login view
+        alert('Account created! You can now login.');
+        this.isSignUp = false;
       } else {
-        // LOGIN
+        // 1. Prepare the input
+        let input = (this.email.trim() || '').toLowerCase();
+        if (input.startsWith('@')) {
+          input = input.substring(1);
+        }
+        let finalEmail = input; // Default to what was typed
+
+        // 2. Lookup logic if it's a username (no @)
+        if (!input.includes('@')) {
+          const { data: profile, error: profileError } =
+            await this.supabase.client
+              .from('profiles')
+              .select('email')
+              .eq('username', input.toLowerCase())
+              .maybeSingle();
+
+          if (profileError || !profile) {
+            this.isLoading = false;
+            return alert(`Username "${input}" not found.`);
+          }
+          finalEmail = profile.email;
+          console.log('Found email for login:', finalEmail);
+        }
         const { error } = await this.supabase.client.auth.signInWithPassword({
-          email: this.email,
+          email: finalEmail,
           password: this.password,
         });
+
         if (error) throw error;
-        this.router.navigate(['/tabs/tab1'], { replaceUrl: true });
+        this.isLoading = false;
+        // Navigate only if successful
+        // setTimeout(() => {
+        //   this.router.navigateByUrl('/tabs/tab1', { replaceUrl: true });
+        // }, 100);
       }
     } catch (err: any) {
       alert(err.message);
-    } finally {
       this.isLoading = false;
+    } finally {
+      // THIS IS THE KEY: This runs every single time,
+      // ensuring the "Authenticating" overlay turns off.
+      // setTimeout(() => {
+      this.isLoading = false;
+      // }, 200); // We add a 200ms delay to let the Ionic animation finish
     }
   }
 }

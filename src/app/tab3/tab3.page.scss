@@ -1,0 +1,64 @@
+ion-avatar {
+  background-color: var(--ion-color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 2rem;
+}
+
+.large-avatar-text {
+  /* This ensures the letter is perfectly centered */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.profile-top-section {
+  background: white;
+  padding-bottom: 30px;
+  border-bottom: 1px solid #eee;
+  margin-bottom: 10px;
+
+  .profile-avatar {
+    width: 100px;
+    height: 100px;
+    margin: 0 auto 15px auto;
+    border: 3px solid var(--ion-color-primary);
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+
+    img {
+      object-fit: cover;
+      width: 100%;
+      height: 100%;
+    }
+  }
+}
+
+.large-avatar-text {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: var(--ion-color-primary);
+}
+
+.username-display {
+  font-weight: 700;
+  margin-bottom: 4px;
+  color: #222;
+}
+
+ion-note {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.account-details-list {
+  margin-top: 20px;
+}

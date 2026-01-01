@@ -15,59 +15,98 @@
 </ion-header>
 <ion-content>
   @if (searchResults.length > 0) {
-    <ion-list>
-      <ion-list-header><ion-label color="primary">Found Users</ion-label></ion-list-header>
-      @for (user of searchResults; track user.id) {
-        <ion-item (click)="startChat(user.id)" button="true" detail="true">
-          <ion-avatar slot="start">
-            <div class="initials-avatar">{{ getInitials(user.username) }}</div>
-          </ion-avatar>
-          <ion-label>
-            <h2>@{{ user.username }}</h2>
-            <p [style.color]="user.isExisting ? '#808080' : '#3880ff'" style="font-weight: 500">
-              {{ user.isExisting ? 'Continue conversation' : 'Start a new chat' }}
-            </p>
-          </ion-label>
-        </ion-item>
-      }
-    </ion-list>
-    <div style="height: 20px; background: #f4f4f4"></div>
+  <ion-list>
+    <ion-list-header
+      ><ion-label color="primary">Found Users</ion-label></ion-list-header
+    >
+    @for (user of searchResults; track user.id) {
+    <ion-item (click)="startChat(user.id)" button="true" detail="true">
+      <ion-avatar slot="start">
+        @if (user.avatar_url) {
+        <img [src]="user.avatar_url" />
+        } @else {
+        <div class="initials-avatar">{{ getInitials(user.username) }}</div>
+        }
+      </ion-avatar>
+
+      <ion-label>
+        <h2>@{{ user.username }}</h2>
+        <p
+          [style.color]="user.isExisting ? '#808080' : '#3880ff'"
+          style="font-weight: 500"
+        >
+          {{ user.isExisting ? 'Continue conversation' : 'Start a new chat' }}
+        </p>
+      </ion-label>
+    </ion-item>
+    }
+  </ion-list>
+  <div style="height: 20px; background: #f4f4f4"></div>
   }
 
   <ion-list>
-    <ion-list-header><ion-label>Recent Conversations</ion-label></ion-list-header>
+    <ion-list-header
+      ><ion-label>Recent Conversations</ion-label></ion-list-header
+    >
 
     @for (chat of personalChats; track chat.room_id) {
-      <ion-item (click)="goToChat(chat)" [button]="true" detail="false">
-        <ion-avatar slot="start">
-          @if (chat.profiles?.avatar_url) {
-            <img [src]="chat.profiles.avatar_url" />
-          } @else {
-            <div class="initials-avatar">{{ getInitials(chat.profiles?.username) }}</div>
-          }
-        </ion-avatar>
+    <ion-item (click)="goToChat(chat)" [button]="true" detail="false">
+      <ion-avatar slot="start">
+        @if (chat.avatar_url) {
+        <img [src]="chat.avatar_url" />
+        } @else {
+        <div class="initials-avatar">{{ getInitials(chat.username) }}</div>
+        }
+        <!-- @if (chat.profiles?.avatar_url) {
+        <img [src]="chat.profiles.avatar_url" />
+        } @else {
+        <div class="initials-avatar">
+          {{ getInitials(chat.profiles?.username) }}
+        </div>
+        } -->
+      </ion-avatar>
 
-        <ion-label>
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h2>@{{ chat.profiles?.username }}</h2>
-            @if (chat.lastMsgDate && !typingStates[chat.room_id]) {
-              <ion-note style="font-size: 0.8rem">{{ chat.lastMsgDate | date:'shortTime' }}</ion-note>
-            }
-          </div>
-
-          @if (typingStates[chat.room_id]) {
-            <p class="last-message" style="color: var(--ion-color-success); font-weight: 600; font-style: italic;">typing...</p>
-          } @else {
-            <p class="last-message">{{ chat.lastMsgText }}</p>
+      <ion-label>
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          "
+        >
+          <h2>@{{ chat.profiles?.username }}</h2>
+          @if (chat.lastMsgDate && !typingStates[chat.room_id]) {
+          <ion-note style="font-size: 0.8rem"
+            >{{ chat.lastMsgDate | date:'shortTime' }}</ion-note
+          >
           }
-        </ion-label>
-      </ion-item>
+        </div>
+
+        @if (typingStates[chat.room_id]) {
+        <p
+          class="last-message"
+          style="
+            color: var(--ion-color-success);
+            font-weight: 600;
+            font-style: italic;
+          "
+        >
+          typing...
+        </p>
+        } @else {
+        <p class="last-message">{{ chat.lastMsgText }}</p>
+        }
+      </ion-label>
+    </ion-item>
     } @empty {
-      <div style="text-align: center; padding: 50px 20px; color: #888;">
-        <ion-icon name="chatbubble-ellipses-outline" style="font-size: 64px; color: #ccc;"></ion-icon>
-        <h3>No conversations yet</h3>
-        <p>Search for a friend by @username to start chatting!</p>
-      </div>
+    <div style="text-align: center; padding: 50px 20px; color: #888">
+      <ion-icon
+        name="chatbubble-ellipses-outline"
+        style="font-size: 64px; color: #ccc"
+      ></ion-icon>
+      <h3>No conversations yet</h3>
+      <p>Search for a friend by @username to start chatting!</p>
+    </div>
     }
   </ion-list>
 </ion-content>

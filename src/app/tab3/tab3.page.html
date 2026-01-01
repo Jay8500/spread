@@ -1,18 +1,34 @@
-<ion-header>
+<ion-header class="ion-no-border">
   <ion-toolbar color="primary">
     <ion-title>Settings</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content color="light">
+  <div class="ion-text-center ion-padding profile-top-section">
+    <ion-avatar class="profile-avatar">
+      @if (userProfile?.avatar_url) {
+      <img [src]="userProfile.avatar_url" />
+      } @else {
+      <div class="large-avatar-text">
+        {{ getInitials(userProfile?.username) }}
+      </div>
+      }
+    </ion-avatar>
+
+    <h2 class="username-display">@{{ userProfile?.username || 'user' }}</h2>
+    <ion-note>{{ userProfile?.email }}</ion-note>
+    <ion-note>Spread Chat Member</ion-note>
+  </div>
+
   <ion-list [inset]="true">
-    <ion-item (click)="signOut()" button="true" detail="false">
-      <ion-icon slot="start" name="logout" color="danger"></ion-icon>
+    <ion-item (click)="signOut()" button="true" detail="true">
+      <ion-icon slot="start" name="log-out-outline" color="danger"></ion-icon>
       <ion-label color="danger">Sign Out</ion-label>
     </ion-item>
   </ion-list>
-  
-  <div class="ion-text-center" style="margin-top: 20px;">
-    <p style="color: #999; font-size: 0.8rem;">Spread App v1.0.0-debug</p>
+
+  <div class="ion-text-center" style="margin-top: 20px">
+    <p style="color: #999; font-size: 0.8rem">Spread App v{{ appVersion }}</p>
   </div>
 </ion-content>
