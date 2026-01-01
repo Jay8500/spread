@@ -1,17 +1,52 @@
 <ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>
-      Tab 2
-    </ion-title>
+  <ion-toolbar color="primary">
+    <ion-title>Profile</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Tab 2</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content color="light">
+  <div class="ion-text-center ion-padding profile-top-section">
+    <ion-avatar class="profile-avatar">
+      <div class="large-avatar-text">{{ getInitials(userProfile?.username) }}</div>
+    </ion-avatar>
+    
+    <h2 class="username-display">@{{ userProfile?.username || 'user' }}</h2>
+    <ion-note>Spread Chat Member</ion-note>
+  </div>
 
-  <app-explore-container name="Tab 2 page"></app-explore-container>
+  <ion-list [inset]="true" class="account-details-list">
+    <ion-list-header>
+      <ion-label color="primary">Account Details</ion-label>
+    </ion-list-header>
+
+    <ion-item>
+      <ion-icon slot="start" name="person-outline" color="primary"></ion-icon>
+      <ion-label>
+        <p>Display Name</p>
+        <h2>{{ userProfile?.username }}</h2>
+      </ion-label>
+    </ion-item>
+
+    <ion-item>
+      <ion-icon slot="start" name="mail-outline" color="primary"></ion-icon>
+      <ion-label>
+        <p>Email Address</p>
+        <h2>{{ userProfile?.email || 'Loading...' }}</h2>
+      </ion-label>
+    </ion-item>
+
+    <ion-item>
+      <ion-icon slot="start" name="calendar-outline" color="primary"></ion-icon>
+      <ion-label>
+        <p>Member Since</p>
+        <h2>{{ userProfile?.created_at | date:'longDate' }}</h2>
+      </ion-label>
+    </ion-item>
+  </ion-list>
+
+  <div class="ion-padding ion-text-center">
+    <p style="font-size: 0.8rem; color: #888;">
+      This profile is private. Only you can see these details.
+    </p>
+  </div>
 </ion-content>

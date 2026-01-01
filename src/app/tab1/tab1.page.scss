@@ -1,0 +1,91 @@
+.my-message {
+  display: flex;
+  justify-content: flex-end;
+  .bubble { background: var(--ion-color-primary); color: white; border-radius: 15px 15px 0 15px; }
+}
+.their-message {
+  display: flex;
+  justify-content: flex-start;
+  .bubble { background: #e5e5ea; color: black; border-radius: 15px 15px 15px 0; }
+}
+.bubble {
+  padding: 10px 15px;
+  margin: 5px;
+  max-width: 80%;
+}
+
+// Header: No bottom border, solid soft teal
+ion-header {
+  &.ion-no-border::after {
+    display: none; // Removes that harsh shadow line
+  }
+}
+
+ion-toolbar {
+  --background: var(--ion-color-primary);
+  --border-style: none;
+  --color: white;
+  
+  ion-title {
+    font-weight: 600;
+    letter-spacing: -0.5px;
+  }
+}
+
+// The Search Bar: Clean and integrated
+.custom-search {
+  --background: rgba(255, 255, 255, 0.9); // Semi-transparent white for smoothness
+  --border-radius: 10px;
+  --placeholder-color: #555;
+  --icon-color: var(--ion-color-primary);
+  padding: 0 16px 12px 16px;
+  margin-top: -5px;
+}
+
+// The Scrollable Area
+ion-content {
+  --background: #f0f7f7; // The very light seafoam background
+}
+
+// Smooth Chat Cards
+.chat-item {
+  --background: #ffffff;
+  --padding-start: 16px;
+  --inner-padding-end: 16px;
+  margin: 10px 16px;
+  border-radius: 14px;
+  // Softest possible shadow
+  box-shadow: 0 4px 12px rgba(0, 128, 128, 0.05); 
+}
+
+.last-message {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  // white-space: nowrap;
+  // overflow: hidden;
+  // text-overflow: ellipsis;
+  // max-width: 90%;
+  // color: var(--ion-color-medium);
+  // font-size: 0.9rem;
+  // margin-top: 4px;
+}
+
+ion-label h2 {
+  font-weight: 600;
+  margin-bottom: 0;
+}
+
+.initials-avatar {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--ion-color-primary); // Uses your primary blue/purple
+  color: white;
+  font-weight: bold;
+  font-size: 1.2rem;
+  border-radius: 50%;
+  text-transform: uppercase;
+}

@@ -1,0 +1,59 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/tab1"></ion-back-button>
+    </ion-buttons>
+    <ion-title>@{{ chatName }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+<ion-content class="ion-padding">
+  <div class="chat-container">
+    @for (msg of messages; track $index) {
+    <div
+      class="message-row"
+      [class]="msg.user_id === currentUserId ? 'message-me' : 'message-them'"
+    >
+      <div class="bubble">{{ msg.content }}</div>
+    </div>
+    }
+  </div>
+</ion-content>
+<ion-footer class="ion-no-border">
+  @if (isOtherTyping) {
+  <div
+    style="
+      padding: 5px 15px;
+      font-size: 0.8rem;
+      color: var(--ion-color-primary);
+      font-style: italic;
+    "
+  >
+    {{ chatName }} is typing...
+  </div>
+  }
+  <ion-toolbar color="light">
+    <div style="display: flex; align-items: center; padding: 8px; gap: 8px">
+      <ion-input
+        [(ngModel)]="newMessage"
+        placeholder="Type a message..."
+        (keyup.enter)="sendMessage()"
+        (ionInput)="onTyping($event)"
+        style="
+          background: #fff;
+          border-radius: 20px;
+          --padding-start: 15px;
+          border: 1px solid #ddd;
+          flex: 1;
+        "
+      >
+      </ion-input>
+      <ion-button
+        (click)="sendMessage()"
+        [disabled]="!newMessage.trim()"
+        fill="clear"
+      >
+        SEND
+      </ion-button>
+    </div>
+  </ion-toolbar>
+</ion-footer>

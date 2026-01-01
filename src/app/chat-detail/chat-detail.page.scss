@@ -1,0 +1,79 @@
+/* The main container needs to fill the screen and scroll */
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  /* This ensures the messages start from the bottom if there are only a few */
+  justify-content: flex-end; 
+  min-height: 100%;
+}
+
+/* Individual message wrapper */
+.message-row {
+  display: flex;
+  width: 100%;
+  margin: 5px 0;
+}
+
+/* Align Jay's messages to the right */
+.message-me {
+ justify-content: flex-end;
+  .bubble {
+    background: #007aff;
+    color: white;
+    border-radius: 15px 15px 0 15px;
+  }
+}
+/* Arun's messages */
+.message-them {
+  justify-content: flex-start;
+  .bubble {
+    background: #e5e5ea;
+    color: black;
+    border-radius: 15px 15px 15px 0;
+  }
+}
+
+.bubble {
+  padding: 10px 15px;
+  max-width: 80%;
+  font-size: 16px;
+}
+.input-container {
+  display: flex;
+  align-items: center;
+  padding: 5px 10px;
+  background: white;
+
+  .custom-input {
+    --padding-start: 12px;
+    background: #f4f4f4;
+    border-radius: 20px;
+    margin-right: 8px;
+    min-height: 40px;
+  }
+}
+
+.chat-input-wrapper {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  gap: 8px;
+
+  .chat-pill {
+    background: #ffffff;
+    border-radius: 25px;
+    --padding-start: 15px;
+    border: 1px solid #ddd;
+    min-height: 40px;
+    flex: 1; // This makes the input take all available space
+  }
+}
+
+.typing-notice {
+  padding: 5px 15px;
+  font-size: 0.8rem;
+  color: var(--ion-color-primary);
+  font-style: italic;
+  background: var(--ion-color-light);
+}

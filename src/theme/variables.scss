@@ -1,2 +1,16 @@
-// For information on how to create your own theme, please refer to:
-// https://ionicframework.com/docs/theming/
+/* src/theme/variables.scss */
+:root {
+  /* Very Light Smooth Teal Palette */
+  --ion-color-primary: #48a9a6;         /* The main soft teal */
+  --ion-color-primary-rgb: 72, 169, 166;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #3f9592;
+  --ion-color-primary-tint: #5ab1ae;
+
+  /* Use an extremely light teal for page backgrounds */
+  --ion-background-color: #f0f7f7; 
+}
+@media (prefers-color-scheme: dark) {
+  /* ... many lines of dark colors ... */
+}

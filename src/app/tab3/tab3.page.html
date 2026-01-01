@@ -1,17 +1,18 @@
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>
-      Tab 3
-    </ion-title>
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-title>Settings</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Tab 3</ion-title>
-    </ion-toolbar>
-  </ion-header>
-
-  <app-explore-container name="Tab 3 page"></app-explore-container>
+<ion-content color="light">
+  <ion-list [inset]="true">
+    <ion-item (click)="signOut()" button="true" detail="false">
+      <ion-icon slot="start" name="logout" color="danger"></ion-icon>
+      <ion-label color="danger">Sign Out</ion-label>
+    </ion-item>
+  </ion-list>
+  
+  <div class="ion-text-center" style="margin-top: 20px;">
+    <p style="color: #999; font-size: 0.8rem;">Spread App v1.0.0-debug</p>
+  </div>
 </ion-content>

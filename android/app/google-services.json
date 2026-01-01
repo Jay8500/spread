@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "132924890086",
+    "project_id": "spread-fb4d7",
+    "storage_bucket": "spread-fb4d7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:132924890086:android:f4966bbc74f89f04a59427",
+        "android_client_info": {
+          "package_name": "com.jay.spread"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBiAADNNoK_uQUmTLOd_Z8KYgRXeb-xLhc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
