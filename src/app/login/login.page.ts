@@ -122,4 +122,12 @@ export class LoginPage {
       // }, 200); // We add a 200ms delay to let the Ionic animation finish
     }
   }
+  
+  toggleMode() {
+    this.isSignUp = !this.isSignUp;
+    // Clear fields when switching for a better user experience
+    this.email = '';
+    this.password = '';
+    this.username = '';
+  }
 }
