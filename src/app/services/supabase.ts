@@ -172,15 +172,16 @@ export class Supabase {
 
   // 2. The function to save the Notification Token to the database
   async updateFcmToken(token: string) {
-    const { data: { user } } = await this.supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await this.client.auth.getUser();
     if (!user) return;
 
-    const { error } = await this.supabase
+    const { error } = await this.client
       .from('profiles')
-      .update({ fcm_token: token }) // Make sure your profiles table has this column!
+      .update({ fcm_token: token })
       .eq('id', user.id);
 
-    if (error) console.error('Error saving FCM token:', error);
-    else console.log('FCM token updated in DB');
+    if (error) console.error('Error updating FCM token:', error);
   }
 }

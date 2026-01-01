@@ -52,20 +52,14 @@
     @for (chat of personalChats; track chat.room_id) {
     <ion-item (click)="goToChat(chat)" [button]="true" detail="false">
       <ion-avatar slot="start">
-        @if (chat.avatar_url) {
-        <img [src]="chat.avatar_url" />
-        } @else {
-        <div class="initials-avatar">{{ getInitials(chat.username) }}</div>
-        }
-        <!-- @if (chat.profiles?.avatar_url) {
+        @if (chat.profiles?.avatar_url) {
         <img [src]="chat.profiles.avatar_url" />
         } @else {
         <div class="initials-avatar">
           {{ getInitials(chat.profiles?.username) }}
         </div>
-        } -->
+        }
       </ion-avatar>
-
       <ion-label>
         <div
           style="

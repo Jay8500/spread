@@ -65,12 +65,26 @@ export class AppComponent implements OnInit {
 
     await PushNotifications.register();
 
-    PushNotifications.addListener('registration', (token) => {
+    PushNotifications.addListener('registration', async (token) => {
       console.log('Push registration success, token: ' + token.value);
-      // This saves the token to your Supabase profiles table
-      this.supabase.updateFcmToken(token.value);
-    });
 
+      // Wait a second to make sure the session is active
+      const {
+        data: { session },
+      } = await this.supabase.client.auth.getSession();
+
+      if (session?.user) {
+        // If user is logged in, save it!
+        await this.supabase.updateFcmToken(token.value);
+        console.log('FCM Token synced to Supabase for user:', session.user.id);
+      } else {
+        console.log(
+          'Token received but no user logged in yet. Will save on sign-in.'
+        );
+        // Optional: Store token in localStorage to save it once they log in
+        localStorage.setItem('pending_fcm_token', token.value);
+      }
+    });
     PushNotifications.addListener(
       'pushNotificationReceived',
       (notification) => {
