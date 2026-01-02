@@ -9,8 +9,8 @@ import {
   IonSpinner,
   IonIcon, // 1. Ensure this is imported from standalone
 } from '@ionic/angular/standalone';
-import { addIcons } from 'ionicons'; 
-import { eyeOutline, eyeOffOutline } from 'ionicons/icons'; 
+import { addIcons } from 'ionicons';
+import { eyeOutline, eyeOffOutline } from 'ionicons/icons';
 import { Supabase } from '../services/supabase';
 @Component({
   selector: 'app-login',
@@ -114,15 +114,16 @@ export class LoginPage {
         // }, 100);
       }
     } catch (err: any) {
-      alert(err.message);
       this.isLoading = false;
+      alert(err.message);
     } finally {
       // THIS IS THE KEY: This runs every single time,
       // ensuring the "Authenticating" overlay turns off.
-      // setTimeout(() => {
-      this.isLoading = false;
-      // }, 200); // We add a 200ms delay to let the Ionic animation finish
+      setTimeout(() => {
+        this.isLoading = false;
+      }, 200); // We add a 200ms delay to let the Ionic animation finish
     }
+    this.isLoading = false;
   }
 
   toggleMode() {
