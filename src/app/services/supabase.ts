@@ -184,4 +184,42 @@ export class Supabase {
 
     if (error) console.error('Error updating FCM token:', error);
   }
+
+  // Add to your SupabaseService class
+  async getTodos() {
+    const { data, error } = await this.supabase
+      .from('todos')
+      .select('*')
+      .order('created_at', { ascending: false });
+    return data;
+  }
+
+  async addTodo(task: string, dueAt?: string) {
+    const user = await this.supabase.auth.getUser();
+    return await this.supabase.from('todos').insert({
+      task,
+      user_id: user.data.user?.id,
+      due_at: dueAt,
+    });
+  }
+
+  // Update the completion status of a specific task
+  async updateTodoStatus(todoId: string, isCompleted: boolean) {
+    const { data, error } = await this.supabase
+      .from('todos')
+      .update({ is_completed: isCompleted }) // Column to update
+      .eq('id', todoId) // Matches the specific Task ID
+      .select(); // Returns the updated data
+
+    return { data, error };
+  }
+
+  async deleteTodo(todoId: string) {
+  const { error } = await this.client
+    .from('todos')
+    .delete()
+    .eq('id', todoId);
+
+  return { error };
+}
 }

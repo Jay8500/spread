@@ -3,18 +3,14 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import {
-  IonHeader,
-  IonToolbar,
-  IonTitle,
   IonContent,
-  IonItem,
-  IonLabel,
-  IonInput,
   IonButton,
-  IonText,
-  IonLoading,
+  IonInput,
   IonSpinner,
+  IonIcon, // 1. Ensure this is imported from standalone
 } from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons'; 
+import { eyeOutline, eyeOffOutline } from 'ionicons/icons'; 
 import { Supabase } from '../services/supabase';
 @Component({
   selector: 'app-login',
@@ -33,6 +29,7 @@ import { Supabase } from '../services/supabase';
     IonInput,
     // IonLoading,
     IonSpinner,
+    IonIcon, // Added this
   ],
 })
 export class LoginPage {
@@ -42,7 +39,12 @@ export class LoginPage {
   isSignUp = false;
   isLoading = false;
 
-  constructor(private supabase: Supabase, private router: Router) {}
+  // Add these variables to your component class
+  showPassword = false;
+
+  constructor(private supabase: Supabase, private router: Router) {
+    addIcons({ eyeOutline, eyeOffOutline });
+  }
 
   async handleAuth() {
     if (!this.email || !this.password)
@@ -122,12 +124,17 @@ export class LoginPage {
       // }, 200); // We add a 200ms delay to let the Ionic animation finish
     }
   }
-  
+
   toggleMode() {
     this.isSignUp = !this.isSignUp;
     // Clear fields when switching for a better user experience
     this.email = '';
     this.password = '';
     this.username = '';
+  }
+
+  // 1. Toggle Password Visibility
+  togglePassword() {
+    this.showPassword = !this.showPassword;
   }
 }

@@ -4,6 +4,7 @@ import { PushNotifications } from '@capacitor/push-notifications';
 import { Router } from '@angular/router'; // Add this
 import { Supabase } from './services/supabase';
 import { Capacitor } from '@capacitor/core';
+import { SplashScreen } from '@capacitor/splash-screen';
 @Component({
   selector: 'app-root',
   templateUrl: 'app.component.html',
@@ -11,80 +12,87 @@ import { Capacitor } from '@capacitor/core';
 })
 export class AppComponent implements OnInit {
   constructor(private supabase: Supabase, private router: Router) {}
-  ngOnInit() {
-    this.listenToAuth(); // Start watching the user status
-    this.setupPush();
+  async ngOnInit() {
+    // 1. Initialize Auth and Routing
+    this.listenToAuth();
+
+    // 2. Setup Push Notifications (only if not on Web)
+    if (Capacitor.getPlatform() !== 'web') {
+      await this.setupPush();
+    }
   }
 
-  listenToAuth() {
-    this.supabase.authChanges((event: any, session: any) => {
+  private listenToAuth() {
+    this.supabase.authChanges(async (event: any, session: any) => {
+      console.log('Auth Event:', event);
+
+      // Handle Signed In or Initial Session with a user
       if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
-        // 1. Check the ACTUAL browser URL
         const currentPath = window.location.pathname;
 
-        // 2. LOGIC: If the user is ALREADY inside the tabs or chat, DON'T move them.
-        // We only move them to /tabs/tab1 if they are on /login or /
-        if (
-          currentPath === '/login' ||
-          currentPath === '/' ||
-          currentPath === ''
-        ) {
-          console.log('User is at login/root, moving to Tab 1');
-          this.router.navigateByUrl('/tabs/tab1', { replaceUrl: true });
-        } else {
-          console.log(
-            'User is already at:',
-            currentPath,
-            'keeping them there.'
-          );
+        if (this.isAtRoot(currentPath)) {
+          await this.router.navigateByUrl('/tabs/tab1', { replaceUrl: true });
         }
+        this.safeHideSplash();
       }
 
-      if (event === 'SIGNED_OUT') {
-        this.router.navigateByUrl('/login', { replaceUrl: true });
+      // Handle Signed Out or Initial Session without a user
+      else if (
+        event === 'SIGNED_OUT' ||
+        (event === 'INITIAL_SESSION' && !session)
+      ) {
+        await this.router.navigateByUrl('/login', { replaceUrl: true });
+        this.safeHideSplash();
       }
     });
   }
 
-  async setupPush() {
-    // 3. Add this check to stop the "Plugin not implemented" error on Web
-    if (Capacitor.getPlatform() === 'web') {
-      console.log('Push Notifications skipped: Running on Web');
-      return;
+  /**
+   * Validation: Only hide splash screen if running on native device
+   * and after navigation has been determined.
+   */
+  private async safeHideSplash() {
+    if (Capacitor.getPlatform() !== 'web') {
+      // Small delay ensures the Angular view has rendered behind the splash
+      setTimeout(async () => {
+        await SplashScreen.hide({
+          fadeOutDuration: 400, // Smooth fade out for a premium feel
+        });
+      }, 500);
     }
+  }
 
+  private isAtRoot(path: string): boolean {
+    return (
+      path === '/login' || path === '/' || path === '' || path === '/undefined'
+    );
+  }
+
+  async setupPush() {
+    // Permission and Registration Logic
     let permStatus = await PushNotifications.checkPermissions();
 
     if (permStatus.receive === 'prompt') {
       permStatus = await PushNotifications.requestPermissions();
     }
 
-    if (permStatus.receive !== 'granted') {
-      return;
-    }
+    if (permStatus.receive !== 'granted') return;
 
     await PushNotifications.register();
 
+    // Listener for Registration
     PushNotifications.addListener('registration', async (token) => {
-      console.log('Push registration success, token: ' + token.value);
-
-      // Wait a second to make sure the session is active
       const {
         data: { session },
       } = await this.supabase.client.auth.getSession();
-
       if (session?.user) {
-        // If user is logged in, save it!
         await this.supabase.updateFcmToken(token.value);
-        console.log('FCM Token synced to Supabase for user:', session.user.id);
       } else {
-        console.log(
-          'Token received but no user logged in yet. Will save on sign-in.'
-        );
-        // Optional: Store token in localStorage to save it once they log in
         localStorage.setItem('pending_fcm_token', token.value);
       }
     });
+
+    // Listener for Notifications
     PushNotifications.addListener(
       'pushNotificationReceived',
       (notification) => {

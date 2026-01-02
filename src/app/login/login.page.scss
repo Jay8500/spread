@@ -1,61 +1,136 @@
 /* login.page.scss */
+
+:host {
+  height: 100%;
+  display: block;
+}
+
+ion-content {
+  --background: #fdfdfd;
+  /* Crucial: Prevents Ionic from adding extra padding when keyboard is up */
+  --keyboard-offset: 0px !important;
+}
+
 .login-container {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: center; // Neat centering
   align-items: center;
+  width: 100%;
   min-height: 100%;
   padding: 20px;
-  background: #fdfdfd; // Clean off-white
 }
 
 .brand-section {
   text-align: center;
-  margin-bottom: 40px;
-  width: 100%;
-flex-shrink: 0;
+  margin-bottom: 30px;
   h1 {
-    font-size: 3.5rem;
+    font-size: 3rem;
     font-weight: 800;
     color: var(--ion-color-primary);
     margin: 0;
-    letter-spacing: -1px;
-  }
-  p {
-    color: #666;
-    font-size: 1.1rem;
-    margin-top: 5px;
   }
 }
 
 .form-box {
   width: 100%;
-  max-width: 400px;
+  max-width: 360px;
   background: white;
-  padding: 10px;
-  border-radius: 16px;
-  flex-shrink: 0;
+  padding: 24px;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .custom-input {
-  --background: #f4f7f7; 
-  --padding-start: 15px;
-  --padding-end: 15px;
-  --border-radius: 12px;
-  margin-bottom: 16px;
-  transition: all 0.3s ease;
+ /* 1. Remove the grey bulky background and lines */
+  --background: #f8f9f9; 
+  --highlight-height: 0px;
+  --border-width: 0px;
+  --inner-border-width: 0px;
+
+  /* 2. Control the height - this makes it "slim" */
+  min-height: 45px !important; // Lowering this removes the "bulky" look
+  height: 55px; 
+  
+  /* 3. Style the container */
+  border-radius: 12px;
+  margin-bottom: 12px;
+  border: 1px solid #eee;
+  
+  /* 4. Fix Label & Text alignment */
+  --padding-start: 12px;
+  font-size: 0.9rem; // Smaller text feels more "pro"
+
+  /* This targets the internal Ionic container to remove forced spacing */
+  &::part(container) {
+    padding-top: 4px;
+    padding-bottom: 4px;
+  }
+}
+
+.eye-button {
+--padding-end: 8px;
+  --padding-start: 8px;
+  position: relative;
+  z-index: 999 !important; // Forces the button to stay "on top" of the input
+  margin-top: 15px; 
+  height: 100%;
+  pointer-events: auto !important; // Ensures it captures the touch/click
+  
+  ion-icon {
+    font-size: 1.6rem !important; 
+    color: var(--ion-color-primary);
+    /* Make sure the icon itself doesn't block the click */
+    pointer-events: none; 
+  }
 }
 
 .auth-button {
-  margin-top: 10px;
-  height: 56px;
+  margin-top: 12px;
+  height: 54px;
   --border-radius: 12px;
-  font-weight: bold;
-  font-size: 1rem;
+  --box-shadow: none;
+  font-weight: 700;
+  font-size: 1.1rem;
 }
 
 .toggle-button {
+  margin-top: 8px;
   --color: var(--ion-color-primary);
-  font-weight: 500;
-  margin-top: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.password-wrapper {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.eye-button-fixed {
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1000 !important;
+  height: 45px;
+  width: 45px;
+  --padding-start: 0;
+  --padding-end: 0;
+  margin: 0;
+  
+  ion-icon {
+    font-size: 1.5rem;
+    color: var(--ion-color-primary);
+  }
+}
+
+/* Ensure the input makes room for the icon on the right */
+.password-wrapper .custom-input {
+  --padding-end: 45px !important;
+  width: 100%;
 }

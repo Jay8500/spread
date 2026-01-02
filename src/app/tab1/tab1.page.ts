@@ -15,13 +15,24 @@ import {
   IonIcon,
   IonListHeader,
   IonNote,
+  IonModal,
+  IonChip,
   IonButtons,
+  IonButton,
+  IonCheckbox,
+  IonDatetime,
+  IonDatetimeButton,
+  IonInput
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
   chatbubbleEllipsesOutline,
   chevronForwardOutline,
   searchOutline,
+  gitNetworkOutline, // New for Mind Map
+  cashOutline, // New for Money
+  lockClosedOutline,
+  checkboxOutline // New for Vault
 } from 'ionicons/icons';
 import { Supabase } from '../services/supabase';
 import { filter } from 'rxjs';
@@ -31,32 +42,32 @@ import { filter } from 'rxjs';
   standalone: true,
   styleUrls: ['tab1.page.scss'],
   imports: [
-    CommonModule,
+   CommonModule, 
     FormsModule,
-    IonHeader,
-    IonToolbar,
-    IonTitle,
-    IonContent,
-    IonSearchbar,
-    IonList,
-    IonItem,
-    IonLabel,
-    IonAvatar,
-    IonListHeader,
-    IonIcon,
-    IonNote, //IonButtons
+    IonHeader, IonToolbar, IonTitle, IonContent, IonSearchbar,
+    IonList, IonItem, IonLabel, IonAvatar, IonIcon, IonNote,
+    IonModal, IonButtons, IonButton,IonListHeader,
+    // THE ESSENTIAL IMPORTS FOR FORM ELEMENTS:
+    IonInput,      // For the newTask text
+    IonCheckbox,   // For the toggle status
+    IonDatetime,   // For the schedule date
+    IonDatetimeButton // For the trigger button
   ],
 })
 export class Tab1Page {
   searchResults: any[] = [];
   personalChats: any[] = [];
-
+  selectedDate: string = new Date().toISOString();
   constructor(private supabase: Supabase, private router: Router) {
     // Register icons so they show up in the UI
     addIcons({
       chatbubbleEllipsesOutline,
+      checkboxOutline,
       chevronForwardOutline,
       searchOutline,
+      gitNetworkOutline,
+      cashOutline,
+      lockClosedOutline,
     });
     // 2. LISTEN FOR NAVIGATION (This is the fix!)
     this.router.events
@@ -97,6 +108,7 @@ export class Tab1Page {
         const { data: messages } = await this.supabase.getLatestMessage(
           member.room_id
         );
+        const rawVibe = member.profiles?.vibe || 'good';
 
         // FIX: Check if we got an array and take the first item
         const msg = messages && messages.length > 0 ? messages[0] : null;
@@ -105,6 +117,8 @@ export class Tab1Page {
           ...member,
           lastMsgText: msg?.content || null,
           lastMsgDate: msg?.created_at || null,
+          vibe: `vibe-${rawVibe}`, // For CSS class
+          vibeLabel: rawVibe.toUpperCase(), // For the Tag text
         };
       });
 
@@ -221,5 +235,58 @@ export class Tab1Page {
         })
         .subscribe();
     });
+  }
+
+  // Newly Added Dashboard Methods
+  openMindMap() {
+    console.log('Opening Mind Map...');
+    // Replace with your actual route: this.router.navigate(['/mind-map']);
+  }
+
+  openMoney() {
+    console.log('Opening Money Tracker...');
+    // Replace with your actual route: this.router.navigate(['/money']);
+  }
+
+  openVault() {
+    console.log('Opening Vault...');
+    // Replace with your actual route: this.router.navigate(['/vault']);
+  }
+
+  isTodoModalOpen = false;
+  newTask = '';
+  todos: any = [];
+  async openTodoModal() {
+    this.isTodoModalOpen = true;
+    // Refresh list every time modal opens to ensure it's up to date
+    this.todos = await this.supabase.getTodos();
+  }
+
+  async addNewTask() {
+    if (!this.newTask.trim()) return;
+
+    const { data, error } = await this.supabase.addTodo(this.newTask);
+
+    if (!error) {
+      this.newTask = ''; // Clear input
+      this.todos = await this.supabase.getTodos(); // Refresh list
+    }
+  }
+
+  async toggleTodo(todo: any) {
+    // Update the completion status in Supabase
+    await this.supabase.updateTodoStatus(todo.id, !todo.is_completed);
+  }
+
+  async deleteTodo(todoId: string) {
+    const { error } = await this.supabase.deleteTodo(todoId);
+
+    if (!error) {
+      // Filter out the deleted todo from the local list for an instant UI update
+      this.todos = this.todos.filter((t: any) => t.id !== todoId);
+      console.log('Task deleted successfully');
+    } else {
+      console.error('Error deleting task:', error);
+    }
   }
 }
