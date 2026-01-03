@@ -33,22 +33,28 @@
         class="custom-input"
       >
       </ion-input>
-<div class="password-wrapper">
-  <ion-input
-    label="Password"
-    label-placement="floating" label-placement="stacked"
-    [type]="showPassword ? 'text' : 'password'"
-    [(ngModel)]="password"  placeholder="*****"
-    class="custom-input">
-  </ion-input>
-  
-  <ion-button 
-    fill="clear" 
-    (click)="togglePassword()" 
-    class="eye-button-fixed">
-    <ion-icon [name]="showPassword ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
-  </ion-button>
-</div>
+      <div class="password-wrapper">
+        <ion-input
+          label="Password"
+          label-placement="floating"
+          label-placement="stacked"
+          [type]="showPassword ? 'text' : 'password'"
+          [(ngModel)]="password"
+          placeholder="*****"
+          class="custom-input"
+        >
+        </ion-input>
+
+        <ion-button
+          fill="clear"
+          (click)="togglePassword()"
+          class="eye-button-fixed"
+        >
+          <ion-icon
+            [name]="showPassword ? 'eye-off-outline' : 'eye-outline'"
+          ></ion-icon>
+        </ion-button>
+      </div>
       <ion-button expand="block" (click)="handleAuth()" class="auth-button">
         @if (isLoading) {
         <ion-spinner name="crescent"></ion-spinner>

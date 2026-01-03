@@ -52,14 +52,41 @@
 </ion-header>
 
 <ion-content>
-  @if (searchResults.length > 0) { ... }
+  @if (searchResults.length > 0) {
+  <ion-list-header class="section-title">
+    <ion-label>Search Results</ion-label>
+  </ion-list-header>
+
+  <ion-list lines="none" class="chat-list-container">
+    @for (user of searchResults; track 'search-' + user.id) {
+    <ion-item (click)="startChat(user.id)" [button]="true" class="chat-card">
+      <ion-avatar slot="start">
+        @if (user.avatar_url) {
+        <img [src]="user.avatar_url" />
+        } @else {
+        <div class="initials-avatar">{{ getInitials(user.username) }}</div>
+        }
+      </ion-avatar>
+      <ion-label>
+        <h2>@{{ user.username }}</h2>
+        <p>{{ user.isExisting ? 'In your contacts' : 'New Connection' }}</p>
+      </ion-label>
+      <ion-icon
+        slot="end"
+        name="chevron-forward-outline"
+        color="medium"
+      ></ion-icon>
+    </ion-item>
+    }
+  </ion-list>
+  }
 
   <ion-list-header class="section-title">
     <ion-label>Recent Conversations</ion-label>
   </ion-list-header>
 
   <ion-list lines="none" class="chat-list-container">
-    @for (chat of personalChats; track chat.room_id) {
+    @for (chat of personalChats; track 'chat-' + chat.room_id) {
     <ion-item
       (click)="goToChat(chat)"
       [button]="true"
@@ -101,8 +128,15 @@
         </div>
       </ion-label>
     </ion-item>
+    } @empty {
+    <div class="ion-padding ion-text-center">
+      <p style="color: #888">
+        No recent chats yet. Search for a friend to start!
+      </p>
+    </div>
     }
   </ion-list>
+
   <ion-modal
     [isOpen]="isTodoModalOpen"
     (didDismiss)="isTodoModalOpen = false"
@@ -123,66 +157,66 @@
           </ion-toolbar>
         </ion-header>
 
-        <ion-content class="ion-padding custom-scroll">
+        <ion-content class="custom-scroll">
           <div class="sticky-input">
-            <ion-item lines="none" class="task-input-item">
-              <ion-input
-                placeholder="What needs to be done?"
-                [(ngModel)]="newTask"
-                (keyup.enter)="addNewTask()"
-              >
-              </ion-input>
+            <div class="input-row">
+              <ion-item lines="none" class="task-input-item">
+                <ion-input
+                  placeholder="What's on your mind?"
+                  [(ngModel)]="newTask"
+                  (keyup.enter)="addNewTask()"
+                ></ion-input>
 
-              <ion-datetime-button
-                slot="end"
-                datetime="todo-picker"
-              ></ion-datetime-button>
-            </ion-item>
+                <ion-datetime-button
+                  slot="end"
+                  datetime="todo-picker"
+                ></ion-datetime-button>
+              </ion-item>
 
-            <ion-modal [keepContentsMounted]="true" [focusTrap]="false">
-              <ng-template>
-                <ion-datetime
-                  id="todo-picker"
-                  presentation="date-time"
-                  [(ngModel)]="selectedDate"
-                >
-                </ion-datetime>
-              </ng-template>
-            </ion-modal>
-
-            <ion-button expand="block" (click)="addNewTask()" class="add-btn">
-              Add to Schedule
-            </ion-button>
+              <ion-button (click)="addNewTask()" class="add-btn-small">
+                <ion-icon name="add-outline"></ion-icon>
+              </ion-button>
+            </div>
           </div>
 
-          <ion-list lines="none">
-            @for (todo of todos; track todo.id) {
-            <ion-item class="todo-item-card">
-              <ion-checkbox
-                slot="start"
-                [checked]="todo.is_completed"
-                (ionChange)="toggleTodo(todo)"
-              ></ion-checkbox>
-              <ion-label [class.done]="todo.is_completed">
-                <h3>{{ todo.task }}</h3>
-                <p>
-                  <ion-icon name="time-outline"></ion-icon> {{ todo.due_at |
-                  date:'short' }}
-                </p>
-              </ion-label>
-              <ion-button
-                slot="end"
-                fill="clear"
-                color="danger"
-                (click)="deleteTodo(todo.id)"
-              >
-                <ion-icon name="trash-outline"></ion-icon>
-              </ion-button>
-            </ion-item>
-            } @empty {
-            <div class="empty-state">No tasks for today!</div>
-            }
-          </ion-list>
+          <div class="todo-list-container">
+            <ion-list lines="none">
+              @for (todo of todos; track todo.id) {
+              <ion-item class="todo-item-card">
+                <ion-checkbox
+                  slot="start"
+                  [checked]="todo.is_completed"
+                  (ionChange)="toggleTodo(todo)"
+                ></ion-checkbox>
+
+                <ion-label [class.done]="todo.is_completed">
+                  <h3>{{ todo.task }}</h3>
+                  <p>
+                    <ion-icon name="time-outline"></ion-icon> {{ todo.due_at |
+                    date:'MMM d, h:mm a' }}
+                  </p>
+                </ion-label>
+
+                <ion-button
+                  slot="end"
+                  fill="clear"
+                  class="delete-btn"
+                  (click)="deleteTodo(todo.id)"
+                >
+                  <ion-icon name="trash-outline"></ion-icon>
+                </ion-button>
+              </ion-item>
+              } @empty {
+              <div class="empty-state">
+                <ion-icon
+                  name="sparkles-outline"
+                  style="font-size: 2rem; margin-bottom: 10px"
+                ></ion-icon>
+                <p>Your schedule is clear for now!</p>
+              </div>
+              }
+            </ion-list>
+          </div>
         </ion-content>
       </div>
     </ng-template>

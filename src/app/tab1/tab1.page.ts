@@ -22,7 +22,7 @@ import {
   IonCheckbox,
   IonDatetime,
   IonDatetimeButton,
-  IonInput
+  IonInput,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -32,7 +32,8 @@ import {
   gitNetworkOutline, // New for Mind Map
   cashOutline, // New for Money
   lockClosedOutline,
-  checkboxOutline // New for Vault
+  checkboxOutline,
+  addOutline, // New for Vault
 } from 'ionicons/icons';
 import { Supabase } from '../services/supabase';
 import { filter } from 'rxjs';
@@ -42,16 +43,28 @@ import { filter } from 'rxjs';
   standalone: true,
   styleUrls: ['tab1.page.scss'],
   imports: [
-   CommonModule, 
+    CommonModule,
     FormsModule,
-    IonHeader, IonToolbar, IonTitle, IonContent, IonSearchbar,
-    IonList, IonItem, IonLabel, IonAvatar, IonIcon, IonNote,
-    IonModal, IonButtons, IonButton,IonListHeader,
+    IonHeader,
+    IonToolbar,
+    IonTitle,
+    IonContent,
+    IonSearchbar,
+    IonList,
+    IonItem,
+    IonLabel,
+    IonAvatar,
+    IonIcon,
+    IonNote,
+    IonModal,
+    IonButtons,
+    IonButton,
+    IonListHeader,
     // THE ESSENTIAL IMPORTS FOR FORM ELEMENTS:
-    IonInput,      // For the newTask text
-    IonCheckbox,   // For the toggle status
-    IonDatetime,   // For the schedule date
-    IonDatetimeButton // For the trigger button
+    IonInput, // For the newTask text
+    IonCheckbox, // For the toggle status
+    // IonDatetime, // For the schedule date
+    IonDatetimeButton, // For the trigger button
   ],
 })
 export class Tab1Page {
@@ -68,6 +81,7 @@ export class Tab1Page {
       gitNetworkOutline,
       cashOutline,
       lockClosedOutline,
+      addOutline
     });
     // 2. LISTEN FOR NAVIGATION (This is the fix!)
     this.router.events
@@ -109,64 +123,53 @@ export class Tab1Page {
           member.room_id
         );
         const rawVibe = member.profiles?.vibe || 'good';
-
-        // FIX: Check if we got an array and take the first item
         const msg = messages && messages.length > 0 ? messages[0] : null;
 
         return {
           ...member,
           lastMsgText: msg?.content || null,
           lastMsgDate: msg?.created_at || null,
-          vibe: `vibe-${rawVibe}`, // For CSS class
-          vibeLabel: rawVibe.toUpperCase(), // For the Tag text
+          vibe: `vibe-${rawVibe}`,
+          vibeLabel: rawVibe.toUpperCase(),
         };
       });
 
       const updatedChats = await Promise.all(chatPromises);
 
-      // Only show chats that actually have messages
-      const activeChats = updatedChats.filter(
-        (chat) => chat.lastMsgDate !== null
-      );
-
-      activeChats.sort((a, b) => {
+      // REMOVE the filter that checks for lastMsgDate !== null
+      // This ensures people appear even if no messages exist yet.
+      updatedChats.sort((a, b) => {
         const dateA = a.lastMsgDate ? new Date(a.lastMsgDate).getTime() : 0;
         const dateB = b.lastMsgDate ? new Date(b.lastMsgDate).getTime() : 0;
         return dateB - dateA;
       });
 
-      this.personalChats = [...activeChats];
+      this.personalChats = [...updatedChats];
     } catch (err) {
       console.error('Fetch Error:', err);
     }
   }
+
   async onSearch(event: any) {
-    const query = event.target.value?.trim();
+    const query = event.target.value?.toLowerCase().trim();
     const cleanQuery = query?.startsWith('@') ? query.substring(1) : query;
 
     if (cleanQuery?.length > 1) {
       const results = await this.supabase.searchUsers(cleanQuery);
 
-      // DEBUG: Let's see exactly what IDs we have in our recent list
-      console.log('Current Personal Chats:', this.personalChats);
+      this.searchResults = (results || []).map((user: any) => {
+        // Ensure we are grabbing the ID and username correctly
+        // Sometimes it's user.id, sometimes it's user.profiles.id
+        const userId = user.id;
 
-      const existingChatIds = this.personalChats
-        .map((chat) => {
-          // We check both the profile ID and the user_id field just in case
-          return chat.profiles?.id || chat.user_id;
-        })
-        .filter((id) => !!id);
-
-      console.log('List of existing IDs:', existingChatIds);
-
-      this.searchResults = (results || []).map((user) => {
-        // Check if the searched user's ID exists in our ID list
-        const match = existingChatIds.some(
-          (id) => String(id) === String(user.id)
+        const isExisting = this.personalChats.some(
+          (chat) => chat.profiles?.id === userId || chat.user_id === userId
         );
+
         return {
           ...user,
-          isExisting: match,
+          username: user.username, // Force a flat username for the UI
+          isExisting: isExisting,
         };
       });
     } else {
@@ -204,16 +207,22 @@ export class Tab1Page {
     }
   }
 
-  getInitials(username: string): string {
-    if (!username) return '?';
-
-    // Split by space or underscore to get initials
-    const parts = username.split(/[ _.]/);
+  getInitials(username: string | undefined | null): string {
+    // 1. Safety check: If no username, return a generic placeholder
+    if (!username) return '??';
+    // 2. Remove @ if it exists
+    const cleanName = username.startsWith('@')
+      ? username.substring(1)
+      : username;
+    // 3. Handle names with spaces, dots, or underscores
+    const parts = cleanName.split(/[ _.]/).filter((p) => p.length > 0);
     if (parts.length > 1) {
       return (parts[0][0] + parts[1][0]).toUpperCase();
     }
-    return username[0].toUpperCase();
+    // 4. Fallback: just take the first two letters of the name
+    return cleanName.substring(0, 2).toUpperCase();
   }
+
   currentUserId: string = ''; // Add this line at the top with your other properties
   typingStates: { [key: string]: boolean } = {};
   setupListPresence() {

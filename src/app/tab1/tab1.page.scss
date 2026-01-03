@@ -130,13 +130,6 @@ ion-avatar {
   }
 }
 
-.sticky-input {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background: #f8fafc;
-  padding-bottom: 10px;
-}
 
 .todo-item-card {
   transition: transform 0.2s ease;
@@ -144,14 +137,7 @@ ion-avatar {
     transform: scale(0.98); // Haptic-like feel when clicking tasks
   }
 }
-.sticky-input {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background: white; // Or your modal background color
-  padding-bottom: 15px;
-  border-bottom: 1px solid #eee;
-}
+
 
 .task-input-item {
   --background: #f4f4f4;
@@ -184,4 +170,141 @@ ion-avatar {
 /* If you want the teal to match the "Good Vibe" green from before */
 ion-avatar.vibe-good .initials-avatar {
   background: #00b894;
+}
+/* --- THE TO-DO MODAL: High-Volume Layout --- */
+.modal-wrapper {
+  background: #f8fbfb; 
+  display: flex;
+  flex-direction: column;
+  height: 100%; // Ensures the wrapper fills the modal height
+  overflow: hidden; // Prevents the whole modal from scrolling awkwardly
+
+  ion-toolbar {
+    --background: #f8fbfb;
+    --color: var(--ion-color-primary);
+    ion-title { font-weight: 800; font-size: 1.2rem; }
+  }
+}
+
+.sticky-input {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  padding: 12px 16px; // Slightly tighter padding
+  background: #f8fbfb;
+  border-bottom: 1px solid rgba(0, 128, 128, 0.08);
+
+  .input-row {
+    display: flex;
+    align-items: center;
+    gap: 8px; // Space between input and button
+  }
+
+  .task-input-item {
+    flex: 1; // Takes up all remaining space
+    --background: #ffffff;
+    --padding-start: 12px;
+    --border-radius: 14px;
+    margin-bottom: 0; // Removed margin since button is beside it
+    box-shadow: 0 4px 12px rgba(0, 128, 128, 0.06);
+    border: 1px solid rgba(0, 128, 128, 0.08);
+    
+    ion-input { 
+      --padding-top: 10px; 
+      --padding-bottom: 10px; 
+      font-size: 0.95rem;
+    }
+
+    /* Make the datetime button a bit smaller to fit */
+    ion-datetime-button {
+      scale: 0.9;
+    }
+  }
+
+  .add-btn-small {
+    --border-radius: 12px;
+    --box-shadow: 0 4px 12px rgba(var(--ion-color-primary-rgb), 0.2);
+    height: 48px;
+    width: 48px; // Makes it a neat square
+    margin: 0;
+    --padding-start: 0;
+    --padding-end: 0;
+    font-size: 1.4rem;
+  }
+}
+
+.todo-list-container {
+  /* Essential for large item handling */
+  flex: 1; 
+  overflow-y: auto; 
+  padding: 8px 16px 24px 16px; // Extra bottom padding for the last item
+  
+  /* Custom thin scrollbar for premium look */
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(0, 128, 128, 0.2);
+    border-radius: 10px;
+  }
+
+  .todo-item-card {
+    --background: #ffffff;
+    margin-bottom: 12px;
+    border-radius: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    border: 1px solid rgba(0,0,0,0.02);
+    transition: all 0.2s ease;
+
+    &:active { transform: scale(0.97); }
+
+    ion-checkbox {
+      --border-radius: 50%;
+      --checkbox-background-checked: var(--ion-color-primary);
+      margin-inline-end: 15px;
+    }
+
+    ion-label {
+      h3 { 
+        font-weight: 700; 
+        color: #2d3436; 
+        font-size: 1rem; 
+        margin-bottom: 4px; 
+        white-space: normal; // Allows long text to wrap instead of cutting off
+      }
+      p { 
+        display: flex; 
+        align-items: center; 
+        gap: 4px; 
+        color: #636e72; 
+        font-size: 0.8rem; 
+        font-weight: 600;
+        ion-icon { font-size: 14px; color: var(--ion-color-primary); }
+      }
+
+      &.done {
+        h3 { text-decoration: line-through; color: #b2bec3; }
+        p { opacity: 0.5; }
+      }
+    }
+
+    .delete-btn {
+      --color: #fab1a0;
+      &:hover { --color: #ff7675; }
+    }
+  }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #b2bec3;
+  font-weight: 600;
+  font-size: 0.9rem;
+  
+  ion-icon {
+    font-size: 3rem;
+    margin-bottom: 16px;
+    opacity: 0.4;
+  }
 }

@@ -11,17 +11,19 @@ import {
   IonItem,
   IonNote,
   IonIcon,
-  IonListHeader,
-  IonSpinner, // Added this for the section title
+  IonSpinner,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
+import { Router } from '@angular/router';
+import { App } from '@capacitor/app';
 import {
-  personOutline,
-  mailOutline,
-  calendarOutline,
+  calendarClearOutline,
+  shieldCheckmarkOutline,
   camera,
-} from 'ionicons/icons'; // Added extra icons
+  logOutOutline,
+} from 'ionicons/icons'; 
 import { Supabase } from '../services/supabase';
+
 @Component({
   selector: 'app-tab2',
   templateUrl: 'tab2.page.html',
@@ -37,30 +39,41 @@ import { Supabase } from '../services/supabase';
     IonLabel,
     IonList,
     IonItem,
-    IonNote, // Use this in HTML to clear yellow warning
+    // IonNote,
     IonIcon,
     IonSpinner,
-    IonListHeader, // Use this in HTML to clear yellow warning
   ],
 })
 export class Tab2Page {
+  appVersion: string = '';
   userProfile: any = null;
-  isUploading = false; // Track upload state
+  isUploading = false;
 
-  constructor(private supabase: Supabase) {
-    // Register all icons used in the HTML
-    addIcons({ personOutline, mailOutline, calendarOutline, camera });
+  constructor(private supabase: Supabase, private router: Router) {
+    addIcons({ 
+      calendarClearOutline, 
+      shieldCheckmarkOutline, 
+      camera, 
+      logOutOutline 
+    });
+  }
+
+  async loadAppInfo() {
+    try {
+      const info = await App.getInfo();
+      this.appVersion = info.version || '1.0.0';
+    } catch (error) {
+      this.appVersion = '1.0.0';
+    }
   }
 
   async ionViewWillEnter() {
+    await this.loadAppInfo();
     await this.fetchProfile();
   }
 
   async fetchProfile() {
-    const {
-      data: { session },
-    } = await this.supabase.client.auth.getSession();
-
+    const { data: { session } } = await this.supabase.client.auth.getSession();
     if (session?.user) {
       const { data, error } = await this.supabase.client
         .from('profiles')
@@ -69,27 +82,19 @@ export class Tab2Page {
         .single();
 
       if (!error && data) {
-        // We merge the email from the auth session into the profile
-        this.userProfile = {
-          ...data,
-          email: session.user.email,
-        };
+        this.userProfile = { ...data, email: session.user.email };
       }
     }
   }
 
   getInitials(username: string): string {
-    if (!username) return '?';
-    return username[0].toUpperCase();
+    return username ? username[0].toUpperCase() : '?';
   }
 
   async onFileSelected(event: any) {
     const file = event.target.files[0];
-    if (!file) return;
-
-    // Validate size (e.g., 2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      alert('Image is too large. Max 2MB.');
+    if (!file || file.size > 2 * 1024 * 1024) {
+      alert('Max 2MB allowed.');
       return;
     }
 
@@ -97,38 +102,32 @@ export class Tab2Page {
     try {
       const userId = this.userProfile.id;
       const fileExt = file.name.split('.').pop();
-      // CHANGE 1: Simplify filename
-      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${userId}/${Math.random()}.${fileExt}`;
 
-      // CHANGE 2: Create a folder structure: "userId/fileName"
-      // This matches the SQL policy: (storage.foldername(name))[1] = auth.uid()
-      const filePath = `${userId}/${fileName}`;
-      // 1. Upload to Supabase Storage
       const { error: uploadError } = await this.supabase.client.storage
-        .from('avatars') // Ensure this bucket is created in Supabase
+        .from('avatars')
         .upload(filePath, file);
 
       if (uploadError) throw uploadError;
 
-      // 2. Get Public URL
-      const {
-        data: { publicUrl },
-      } = this.supabase.client.storage.from('avatars').getPublicUrl(filePath);
+      const { data: { publicUrl } } = this.supabase.client.storage.from('avatars').getPublicUrl(filePath);
 
-      // 3. Update Profiles Table
-      // 3. Update Profiles Table
       const { error: updateError } = await this.supabase.client
         .from('profiles')
         .update({ avatar_url: publicUrl })
         .eq('id', userId);
+        
       if (updateError) throw updateError;
-
-      // 4. Update UI instantly
       this.userProfile.avatar_url = `${publicUrl}?t=${new Date().getTime()}`;
     } catch (err: any) {
       alert('Upload failed: ' + err.message);
     } finally {
       this.isUploading = false;
     }
+  }
+
+  async signOut() {
+    await this.supabase.client.auth.signOut();
+    this.router.navigate(['/login'], { replaceUrl: true });
   }
 }
