@@ -142,7 +142,7 @@ export class Tab2Page {
   }
 
   goBack() {
-    this.router.navigate(['/tabs/tab1'], { replaceUrl: true });
+    this.router.navigate(['/tabs/tab1']);
   }
 
   vibesList = [

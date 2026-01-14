@@ -23,6 +23,9 @@ import {
   IonDatetime,
   IonDatetimeButton,
   IonInput,
+  IonItemSliding,
+  IonItemOptions,
+  IonItemOption,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -41,6 +44,7 @@ import {
 } from 'ionicons/icons';
 import { Supabase } from '../services/supabase';
 import { filter } from 'rxjs';
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
 @Component({
   selector: 'app-tab1',
   templateUrl: 'tab1.page.html',
@@ -64,6 +68,9 @@ import { filter } from 'rxjs';
     IonButtons,
     IonButton,
     IonListHeader,
+    IonItemSliding,
+    IonItemOptions,
+    IonItemOption,
     // THE ESSENTIAL IMPORTS FOR FORM ELEMENTS:
     IonInput, // For the newTask text
     IonCheckbox, // For the toggle status
@@ -97,41 +104,41 @@ export class Tab1Page {
     this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
       .subscribe((event: any) => {
-        // Check if we just landed on Tab 1
         if (event.urlAfterRedirects.includes('/tabs/tab1')) {
-          console.log('Tab 1 became active - Refreshing data...');
-          this.loadChats();
+          // 1. ఒకవేళ personalChats లో ఆల్రెడీ డేటా ఉంటే మళ్ళీ నెట్‌వర్క్ కాల్ చేయొద్దు
+          if (this.personalChats.length === 0) {
+            console.log('Fetching chats for the first time...');
+            this.loadChats();
+          }
         }
       });
   }
 
   async ionViewWillEnter() {
-    // 1. Force a refresh of the user state
+    // 1. కేవలం యూజర్ ఉందో లేదో తనిఖీ చేయి
     const {
       data: { user },
-      error,
     } = await this.supabase.client.auth.getUser();
-
-    if (error || !user) {
-      console.error('Auth error or no user:', error);
+    if (!user) {
       this.router.navigate(['/login'], { replaceUrl: true });
       return;
     }
-
     this.currentUserId = user.id;
 
-    // 2. Now that we are 100% sure we have a user, load the profile and chats
-    await Promise.all([this.fetchProfile(), this.loadChats()]);
+    // 2. ప్రొఫైల్ ని బ్యాక్‌గ్రౌండ్‌లో లోడ్ చేయి (దీనివల్ల స్క్రీన్ మెరవదు)
+    this.fetchProfile();
 
-    this.setupListPresence();
+    // 3. లిస్ట్ ఖాళీగా ఉంటేనే లోడ్ చేయి (ముఖ్యమైన పాయింట్)
+    if (this.personalChats.length === 0) {
+      await this.loadChats();
+      this.setupListPresence();
+    }
   }
 
   async loadChats() {
     try {
-      // Use the ID we just verified in ionViewWillEnter
       if (!this.currentUserId) return;
 
-      // 1. Get my room memberships
       const { data: myMemberships } = await this.supabase.client
         .from('room_members')
         .select('room_id')
@@ -142,9 +149,7 @@ export class Tab1Page {
         return;
       }
 
-      // 2. Map through rooms to find the "Other Person" and their messages
       const chatPromises = myMemberships.map(async (m: any) => {
-        // Find the member in this room who IS NOT ME
         const { data: otherMember } = await this.supabase.client
           .from('room_members')
           .select(
@@ -157,41 +162,42 @@ export class Tab1Page {
           .neq('user_id', this.currentUserId)
           .single();
 
-        if (!otherMember) return null;
+        // ఇక్కడ సేఫ్టీ చెక్: ఒకవేళ వేరే మెంబర్ లేకపోతే అసలు ఈ చాట్ ని చూపించొద్దు
+        if (!otherMember || !otherMember.profiles) return null;
 
-        // Get the latest message
         const { data: messages } = await this.supabase.getLatestMessage(
           m.room_id
         );
         const latestMsg = messages?.[0];
-        const profile = otherMember.profiles;
-        // Inside your Tab 1 loadChats() loop:
-        // Use 'as any' or bracket notation if TypeScript complains
-        const rawVibe = (profile as any)?.vibe || 'good';
+        const profile: any = otherMember.profiles;
+        const rawVibe = profile?.vibe || 'good';
+
         return {
           room_id: m.room_id,
           profiles: profile,
           lastMsgText: latestMsg?.content || 'Start a conversation',
           lastMsgDate: latestMsg?.created_at || null,
-          vibe: `vibe-${rawVibe}`, // This matches your SCSS classes like .vibe-good
+          vibe: `vibe-${rawVibe}`,
           vibeLabel: rawVibe.toUpperCase(),
         };
       });
 
       const results = await Promise.all(chatPromises);
-      this.personalChats = results.filter((c) => c !== null);
 
-      // Sort by date
+      // ఇక్కడ జాగ్రత్తగా ఫిల్టర్ చేయాలి - room_id కచ్చితంగా ఉండాలి
+      this.personalChats = results.filter(
+        (c) => c !== null && c.room_id !== undefined
+      );
+
       this.personalChats.sort((a, b) => {
         const dateA = a.lastMsgDate ? new Date(a.lastMsgDate).getTime() : 0;
         const dateB = b.lastMsgDate ? new Date(b.lastMsgDate).getTime() : 0;
         return dateB - dateA;
       });
     } catch (err) {
-      console.error('Final Fallback Load Error:', err);
+      console.error('Load Chats Error:', err);
     }
   }
-
   async onSearch(event: any) {
     const query = event.target.value?.toLowerCase().trim();
     const cleanQuery = query?.startsWith('@') ? query.substring(1) : query;
@@ -226,7 +232,6 @@ export class Tab1Page {
     );
 
     if (existingChat) {
-      console.log('Redirecting to existing room...');
       this.searchResults = []; // Clear search
       this.router.navigate(['/chat-detail', existingChat.room_id]);
       return;
@@ -268,18 +273,17 @@ export class Tab1Page {
   currentUserId: string = ''; // Add this line at the top with your other properties
   typingStates: { [key: string]: boolean } = {};
   setupListPresence() {
-    this.personalChats.forEach((chat) => {
-      const channel = this.supabase.client.channel(`room-${chat.room_id}`);
+    if (!this.personalChats || this.personalChats.length === 0) return;
 
+    this.personalChats.forEach((chat) => {
+      // ఇక్కడ కూడా రూమ్ ఐడి ఉందో లేదో చెక్ చేయాలి
+      if (!chat || !chat.room_id) return;
+
+      const channel = this.supabase.client.channel(`room-${chat.room_id}`);
       channel
         .on('presence', { event: 'sync' }, () => {
           const state = channel.presenceState();
-          const usersArray = Object.values(state).reduce(
-            (acc: any, val: any) => acc.concat(val),
-            []
-          );
-
-          // Check if the OTHER person in this specific room is typing
+          const usersArray = Object.values(state).flat();
           this.typingStates[chat.room_id] = usersArray.some(
             (u: any) => u.user_id !== this.currentUserId && u.isTyping
           );
@@ -307,14 +311,22 @@ export class Tab1Page {
   isTodoModalOpen = false;
   newTask = '';
   todos: any = [];
-  
+
   async openTodoModal() {
+    // 1. తక్షణమే మోడల్ ఓపెన్ చేయి (don't use await here)
     this.isTodoModalOpen = true;
+
+    // 2. బ్యాక్‌గ్రౌండ్‌లో డేటా లోడ్ చెయ్
+    this.supabase.getTodos().then((data) => {
+      this.todos = data || [];
+    });
+
+    // 3. కీబోర్డ్ ఆటోమేటిక్ గా ఓపెన్ అవ్వడానికి
     setTimeout(() => {
-    this.taskInput.setFocus();
-  }, 400); // Wait for modal animation to finish
-    // Refresh list every time modal opens to ensure it's up to date
-    this.todos = await this.supabase.getTodos();
+      if (this.taskInput) {
+        this.taskInput.setFocus();
+      }
+    }, 300); // 300ms is the sweet spot for animations
   }
 
   async addNewTask() {
@@ -332,6 +344,7 @@ export class Tab1Page {
   }
 
   async deleteTodo(todoId: string) {
+    await Haptics.impact({ style: ImpactStyle.Medium });
     const { error } = await this.supabase.deleteTodo(todoId);
     if (!error) {
       // Filter out the deleted todo from the local list for an instant UI update

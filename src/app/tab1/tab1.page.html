@@ -86,7 +86,7 @@
   </ion-list-header>
 
   <ion-list lines="none" class="chat-list-container">
-    @for (chat of personalChats; track 'chat-' + chat.room_id) {
+    @for (chat of personalChats; track 'chat-' + chat?.room_id ||$index) {
     <ion-item
       (click)="goToChat(chat)"
       [button]="true"
@@ -148,13 +148,13 @@
     class="my-full-screen-modal"
     [initialBreakpoint]="1"
     [breakpoints]="[0, 1]"
-    handleBehavior="cycle"
+    handle="true"
   >
     <ng-template>
       <div class="modal-wrapper">
         <ion-header class="ion-no-border">
           <ion-toolbar>
-            <ion-title>My Schedule ({{ todos.length }})</ion-title>
+            <ion-title>To-do ({{ todos.length }})</ion-title>
             <ion-buttons slot="end">
               <ion-button (click)="isTodoModalOpen = false" strong="true"
                 >Done</ion-button
@@ -188,8 +188,37 @@
               </ion-button>
             </div>
           </div>
-
           <div class="todo-list-container">
+            <ion-list lines="none">
+              @for (todo of todos; track todo.id) {
+              <ion-item-sliding>
+                <ion-item class="todo-item-card">
+                  <ion-checkbox
+                    slot="start"
+                    [checked]="todo.is_completed"
+                    (ionChange)="toggleTodo(todo)"
+                  ></ion-checkbox>
+
+                  <ion-label [class.done]="todo.is_completed">
+                    <h3>{{ todo.task }}</h3>
+                    <p>
+                      <ion-icon name="time-outline"></ion-icon> {{ todo.due_at |
+                      date:'MMM d, h:mm a' }}
+                    </p>
+                  </ion-label>
+                </ion-item>
+
+                <ion-item-options side="end">
+                  <ion-item-option color="danger" (click)="deleteTodo(todo.id)">
+                    <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+                  </ion-item-option>
+                </ion-item-options>
+              </ion-item-sliding>
+              }
+            </ion-list>
+          </div>
+
+          <!-- <div class="todo-list-container">
             <ion-list lines="none">
               @for (todo of todos; track todo.id) {
               <ion-item class="todo-item-card">
@@ -226,7 +255,7 @@
               </div>
               }
             </ion-list>
-          </div>
+          </div> -->
         </ion-content>
       </div>
     </ng-template>

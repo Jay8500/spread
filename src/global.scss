@@ -40,14 +40,20 @@
   --height: 100%;
   --width: 100%;
   --border-radius: 0px;
-  
+ &::part(content) {
+    will-change: transform, opacity;
+  }
   // Make the header blend with the status bar
   ion-toolbar {
     --padding-top: 20px;
     --background: var(--ion-color-primary);
     --color: white;
   }
-
+&::part(handle) {
+    background: var(--ion-color-step-300, #ccc); // గ్రాబర్ కలర్
+    width: 40px;
+    height: 6px;
+  }
   // Ensure content fills the space
   .modal-wrapper {
     height: 100%;
