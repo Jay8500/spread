@@ -9,7 +9,10 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "lint": "ng lint"
+    "lint": "ng lint",
+    "deploy-apk": "firebase appdistribution:distribute android/app/build/outputs/apk/debug/app-debug.apk --app 1:132924890086:android:f4966bbc74f89f04a59427 --project spread-fb4d7 --groups spread-testers",
+    "sub": "ionic build && npx cap sync android && powershell -Command \"$env:ANDROID_HOME='C:\\sdk'; cd android; ./gradlew clean; ./gradlew assembleDebug\" && npm run deploy-apk",
+    "jay": "git add . && git commit -m \"Latest spread app update\" && git push origin main"
   },
   "private": true,
   "dependencies": {
@@ -24,7 +27,7 @@
     "@capacitor/android": "^8.0.0",
     "@capacitor/app": "^8.0.0",
     "@capacitor/core": "8.0.0",
-    "@capacitor/haptics": "8.0.0",
+    "@capacitor/haptics": "^8.0.0",
     "@capacitor/keyboard": "8.0.0",
     "@capacitor/push-notifications": "^8.0.0",
     "@capacitor/splash-screen": "^8.0.0",
@@ -32,6 +35,7 @@
     "@ionic/angular": "^8.0.0",
     "@supabase/supabase-js": "^2.89.0",
     "ionicons": "^7.0.0",
+    "peerjs": "^1.5.5",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.15.0"

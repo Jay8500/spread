@@ -7,6 +7,8 @@ import {
   IonContent,
   IonAvatar,
   IonLabel,
+  IonButton,
+  IonButtons,
   IonList,
   IonItem,
   IonNote,
@@ -21,7 +23,8 @@ import {
   shieldCheckmarkOutline,
   camera,
   logOutOutline,
-} from 'ionicons/icons'; 
+  chevronBackOutline,
+} from 'ionicons/icons';
 import { Supabase } from '../services/supabase';
 
 @Component({
@@ -39,6 +42,8 @@ import { Supabase } from '../services/supabase';
     IonLabel,
     IonList,
     IonItem,
+    IonButton,
+    IonButtons,
     // IonNote,
     IonIcon,
     IonSpinner,
@@ -50,11 +55,12 @@ export class Tab2Page {
   isUploading = false;
 
   constructor(private supabase: Supabase, private router: Router) {
-    addIcons({ 
-      calendarClearOutline, 
-      shieldCheckmarkOutline, 
-      camera, 
-      logOutOutline 
+    addIcons({
+      calendarClearOutline,
+      shieldCheckmarkOutline,
+      camera,
+      logOutOutline,
+      chevronBackOutline,
     });
   }
 
@@ -73,7 +79,9 @@ export class Tab2Page {
   }
 
   async fetchProfile() {
-    const { data: { session } } = await this.supabase.client.auth.getSession();
+    const {
+      data: { session },
+    } = await this.supabase.client.auth.getSession();
     if (session?.user) {
       const { data, error } = await this.supabase.client
         .from('profiles')
@@ -110,13 +118,15 @@ export class Tab2Page {
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = this.supabase.client.storage.from('avatars').getPublicUrl(filePath);
+      const {
+        data: { publicUrl },
+      } = this.supabase.client.storage.from('avatars').getPublicUrl(filePath);
 
       const { error: updateError } = await this.supabase.client
         .from('profiles')
         .update({ avatar_url: publicUrl })
         .eq('id', userId);
-        
+
       if (updateError) throw updateError;
       this.userProfile.avatar_url = `${publicUrl}?t=${new Date().getTime()}`;
     } catch (err: any) {
@@ -129,5 +139,45 @@ export class Tab2Page {
   async signOut() {
     await this.supabase.client.auth.signOut();
     this.router.navigate(['/login'], { replaceUrl: true });
+  }
+
+  goBack() {
+    this.router.navigate(['/tabs/tab1'], { replaceUrl: true });
+  }
+
+  vibesList = [
+    { id: 'good', label: 'GOOD' },
+    { id: 'chill', label: 'CHILL' },
+    { id: 'busy', label: 'BUSY' },
+    { id: 'gym', label: 'GYM' },
+    { id: 'sleep', label: 'SLEEP' },
+  ];
+  // ADD THIS LINE HERE
+  updatingVibe: string | null = null;
+  isVibeUpdating = false;
+  async updateVibe(newVibe: string) {
+    if (!this.userProfile || this.updatingVibe) return;
+
+    // 1. Set which vibe is currently loading (e.g., 'chill')
+    this.updatingVibe = newVibe;
+
+    try {
+      const { error } = await this.supabase.client
+        .from('profiles')
+        .update({ vibe: newVibe })
+        .eq('id', this.userProfile.id);
+
+      if (!error) {
+        // 2. Update UI only after success
+        this.userProfile.vibe = newVibe;
+      } else {
+        console.error('Update failed', error);
+      }
+    } catch (err) {
+      console.error('Database error:', err);
+    } finally {
+      // 3. Clear loading state so the spinner disappears
+      this.updatingVibe = null;
+    }
   }
 }

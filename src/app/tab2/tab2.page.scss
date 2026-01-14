@@ -1,3 +1,23 @@
+ion-toolbar {
+  --background: var(--ion-color-primary);
+  --color: white;
+  
+  ion-title {
+    font-weight: 700;
+    font-size: 1.1rem;
+    letter-spacing: -0.3px;
+  }
+
+  ion-button {
+    --color: white;
+    margin-inline-start: 8px;
+    
+    ion-icon {
+      font-size: 1.6rem; /* Crisp, readable size */
+    }
+  }
+}
+
 ion-avatar {
   background-color: var(--ion-color-primary);
   display: flex;
@@ -77,68 +97,6 @@ ion-avatar {
   color: var(--ion-color-primary);
 }
 
-.profile-card {
-  background: white;
-  margin: 20px 16px;
-  padding: 24px 16px;
-  border-radius: 24px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-  text-align: center;
-
-  .avatar-wrapper {
-    position: relative;
-    width: 100px;
-    margin: 0 auto 16px;
-    
-    .main-avatar {
-      width: 100px; height: 100px;
-      border: 3px solid #f0f7f7;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      
-      .initials {
-        height: 100%; display: flex; align-items: center; justify-content: center;
-        background: var(--ion-color-primary); color: white; font-size: 2rem; font-weight: 700;
-      }
-    }
-    
-    .camera-badge {
-      position: absolute; bottom: 0; right: 0;
-      background: var(--ion-color-primary); color: white;
-      padding: 6px; border-radius: 50%; border: 2px solid white;
-      font-size: 1rem;
-    }
-  }
-
-  .identity-section {
-    h2 { font-weight: 800; font-size: 1.4rem; margin: 0; color: #2d3436; }
-    p { color: #636e72; margin: 4px 0 16px; font-size: 0.9rem; }
-  }
-
-  .info-grid {
-    display: flex; gap: 10px; justify-content: center;
-    border-top: 1px solid #f0f0f0; padding-top: 16px;
-
-    .info-box {
-      background: #f8fafc;
-      padding: 8px 12px;
-      border-radius: 12px;
-      display: flex; align-items: center; gap: 6px;
-      font-size: 0.75rem; font-weight: 600; color: #636e72;
-      
-      ion-icon { color: var(--ion-color-primary); font-size: 1rem; }
-    }
-  }
-}
-
-.action-list {
-  margin-top: -10px;
-  .logout-item {
-    --color: #ff7675;
-    --background: #fff;
-    font-weight: 700;
-    ion-icon { font-size: 1.2rem; }
-  }
-}
 
 .footer-note {
   text-align: center; color: #b2bec3; font-size: 0.7rem; margin-top: 20px;
@@ -213,6 +171,103 @@ ion-avatar {
     p { color: #636e72; margin: 4px 0 20px; font-size: 0.85rem; font-weight: 500; }
   }
 
+.vibe-section {
+  margin-bottom: 24px;
+  
+  .section-label {
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: #b2bec3;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+
+  .vibe-container {
+    display: flex;
+  justify-content: flex-start; // Allows chips to align to the left and scroll
+  gap: 10px;
+  overflow-x: auto; // Enables the horizontal swipe
+  padding: 10px 4px; 
+  margin: 0 -4px; // Gives breathing room for the scroll
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch; // Makes it feel "rubbery" on iPhone
+
+  &::-webkit-scrollbar {
+    display: none; // Keeps it clean - no ugly scrollbar
+  }
+
+    .vibe-chip {
+      flex: 0 0 auto; // Prevents chips from shrinking
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 14px;
+      background: #f8fafc;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      border: 1px solid transparent;
+      min-width: 90px;
+      justify-content: center;
+
+      span {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #636e72;
+      }
+
+      .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #b2bec3;
+      }
+
+      .tiny-spinner {
+        width: 14px;
+        height: 14px;
+        --color: var(--ion-color-primary);
+      }
+
+      &.active {
+        background: white;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        border-color: #f1f5f9;
+        transform: translateY(-2px);
+        
+        span { color: #2d3436; }
+
+        &.good { 
+          .dot { background: #00b894; box-shadow: 0 0 8px #00b894; }
+          .tiny-spinner { --color: #00b894; }
+        }
+        &.chill { 
+          .dot { background: #6c5ce7; box-shadow: 0 0 8px #6c5ce7; }
+          .tiny-spinner { --color: #6c5ce7; }
+        }
+        &.busy { 
+          .dot { background: #ff7675; box-shadow: 0 0 8px #ff7675; }
+          .tiny-spinner { --color: #ff7675; }
+        }
+        &.gym .dot { 
+        background: #fdcb6e; // Nice athletic orange/yellow
+        box-shadow: 0 0 8px #fdcb6e; 
+      }
+      &.gym .tiny-spinner { --color: #fdcb6e; }
+      &.sleep { 
+  .dot { 
+    background: #0984e3; // Deep calm blue
+    box-shadow: 0 0 8px #0984e3; 
+  }
+  .tiny-spinner { 
+    --color: #0984e3; 
+  }
+}
+      }
+    }
+  }
+}
   .info-grid {
     display: flex;
     gap: 8px;
@@ -240,11 +295,10 @@ ion-avatar {
 .action-list {
   margin-top: -8px;
   .logout-item {
-    --color: #ff7675;
-    --background: #fff;
-    font-weight: 700;
-    --padding-start: 16px;
-    ion-icon { font-size: 1.2rem; }
+ion-label {
+    text-align: center;
+    margin-right: 32px; // Offsets the icon on the left to keep text centered
+  }
   }
 }
 

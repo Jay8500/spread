@@ -1,5 +1,11 @@
 <ion-header [translucent]="true" class="ion-no-border">
   <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-button (click)="goBack()">
+        <ion-icon slot="icon-only" name="chevron-back-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+
     <ion-title>Profile</ion-title>
   </ion-toolbar>
 </ion-header>
@@ -9,28 +15,55 @@
     <div class="avatar-wrapper" (click)="fileInput.click()">
       <ion-avatar class="main-avatar">
         @if (userProfile?.avatar_url) {
-          <img [src]="userProfile.avatar_url" />
+        <img [src]="userProfile.avatar_url" />
         } @else {
-          <div class="initials">{{ getInitials(userProfile?.username) }}</div>
+        <div class="initials">{{ getInitials(userProfile?.username) }}</div>
         }
       </ion-avatar>
-      
+
       <div class="camera-badge">
         <ion-icon name="camera"></ion-icon>
       </div>
 
       @if (isUploading) {
-        <div class="upload-spin">
-          <ion-spinner name="crescent" color="light"></ion-spinner>
-        </div>
+      <div class="upload-spin">
+        <ion-spinner name="crescent" color="light"></ion-spinner>
+      </div>
       }
     </div>
 
-    <input type="file" #fileInput style="display: none" (change)="onFileSelected($event)" accept="image/png, image/jpeg" />
+    <input
+      type="file"
+      #fileInput
+      style="display: none"
+      (change)="onFileSelected($event)"
+      accept="image/png, image/jpeg"
+    />
 
     <div class="identity-section">
       <h2>@{{ userProfile?.username || 'user' }}</h2>
       <p>{{ userProfile?.email }}</p>
+    </div>
+
+    <div class="vibe-section">
+      <p class="section-label">MY AURA</p>
+      <div class="vibe-container">
+        @for (v of vibesList; track v.id) {
+        <div
+          class="vibe-chip {{ v.id }}"
+          [class.active]="userProfile?.vibe === v.id"
+          [class.disabled]="updatingVibe"
+          (click)="updateVibe(v.id)"
+        >
+          @if (updatingVibe === v.id) {
+          <ion-spinner name="crescent" class="tiny-spinner"></ion-spinner>
+          } @else {
+          <div class="dot"></div>
+          }
+          <span>{{ v.label }}</span>
+        </div>
+        }
+      </div>
     </div>
 
     <div class="info-grid">
@@ -46,7 +79,12 @@
   </div>
 
   <ion-list [inset]="true" class="action-list">
-    <ion-item (click)="signOut()" button="true" lines="none" class="logout-item">
+    <ion-item
+      (click)="signOut()"
+      button="true"
+      lines="none"
+      class="logout-item"
+    >
       <ion-icon slot="start" name="log-out-outline"></ion-icon>
       <ion-label>Sign Out</ion-label>
     </ion-item>

@@ -3,11 +3,106 @@ ion-content { --background: #f0f7f7; }
 
 ion-header.ion-no-border::after { display: none; }
 
+// ion-toolbar {
+//   --background: var(--ion-color-primary);
+//   --border-style: none;
+//   --color: white;
+//   ion-title { font-weight: 600; letter-spacing: -0.5px; }
+// }
+
 ion-toolbar {
   --background: var(--ion-color-primary);
   --border-style: none;
   --color: white;
-  ion-title { font-weight: 600; letter-spacing: -0.5px; }
+  --padding-top: 4px;
+  --padding-bottom: 4px;
+
+  ion-title {
+    padding-inline: 16px;
+    width: 100%;
+    
+    .header-spread-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+
+      .title-text {
+        font-weight: 800;
+        font-size: 1.4rem;
+        letter-spacing: -0.5px;
+      }
+
+      // --- YOUR AURA WRAPPER ---
+      .header-avatar-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2px; // Space for the ring
+        border-radius: 50%;
+        transition: all 0.4s ease;
+        cursor: pointer;
+
+        // Dynamic Border & Glow based on userProfile.vibe
+       &.good  { border: 2px solid #00b894; box-shadow: 0 0 12px rgba(0, 184, 148, 0.4); }
+  &.chill { border: 2px solid #6c5ce7; box-shadow: 0 0 12px rgba(108, 92, 231, 0.4); }
+  &.busy  { border: 2px solid #ff7675; box-shadow: 0 0 12px rgba(255, 118, 117, 0.4); }
+  &.gym   { border: 2px solid #fdcb6e; box-shadow: 0 0 12px rgba(253, 203, 110, 0.4); }
+  &.sleep { border: 2px solid #0984e3; box-shadow: 0 0 12px rgba(9, 132, 227, 0.4); } // NEW
+        &:active {
+          transform: scale(0.92); // Maintains your haptic feel
+        }
+
+        .main-avatar {
+          width: 38px;  /* Adjusted slightly to fit the ring neatly */
+          height: 38px;
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+          margin: 0;
+
+          .initials {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 700;
+            border-radius: 50%;
+          }
+
+          img {
+            object-fit: cover;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+          }
+        }
+
+        // --- MINI INDICATOR DOT ---
+        .vibe-indicator {
+          position: absolute;
+          bottom: -1px;
+          right: -1px;
+          width: 11px;
+          height: 11px;
+          border-radius: 50%;
+          border: 2px solid var(--ion-color-primary); /* Blends into Teal Header */
+          background: #b2bec3; /* Default gray */
+          z-index: 10;
+          transition: background 0.3s ease;
+        }
+
+        &.good  .vibe-indicator { background: #00b894; }
+  &.chill .vibe-indicator { background: #6c5ce7; }
+  &.busy  .vibe-indicator { background: #ff7675; }
+  &.gym   .vibe-indicator { background: #fdcb6e; }
+  &.sleep .vibe-indicator { background: #0984e3; } // NEW
+      }
+    }
+  }
 }
 
 .custom-search {
@@ -61,19 +156,29 @@ ion-toolbar {
   h2 { font-weight: 700; font-size: 1rem; margin: 0; display: flex; align-items: center; gap: 8px; }
 }
 
-.vibe-tag {
-  font-size: 0.55rem; padding: 2px 6px; border-radius: 4px; color: white; font-weight: 900;
-  &.vibe-good { background: #00b894; }
-  &.vibe-busy { background: #d63031; }
-}
-
 ion-avatar {
   padding: 2px; border: 2px solid #eee;
   &.vibe-good { border-color: #00b894; }
 }
 
-.last-message { font-size: 0.85rem; color: #666; margin-top: 2px; }
-
+.last-message { 
+  font-size: 0.85rem; 
+  color: #666; 
+  margin-top: 2px;
+  
+  /* --- ELLIPSIS LOGIC --- */
+  display: block;           /* Ensures it behaves as a block for width */
+  white-space: nowrap;      /* Prevents text from wrapping to a second line */
+  overflow: hidden;         /* Hides the text that goes past the edge */
+  text-overflow: ellipsis;  /* Adds the '...' at the end of the line */
+  max-width: 90%;           /* Adjust this based on your layout needs */
+}
+.chat-label-container {
+ width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
 .section-title { --color: #888; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-top: 10px; }
 
 
@@ -307,4 +412,40 @@ ion-avatar.vibe-good .initials-avatar {
     margin-bottom: 16px;
     opacity: 0.4;
   }
+}
+
+/* Add this to your SCSS to handle avatars inside the list items */
+.list-avatar {
+  /* Scale it down slightly for the list compared to the header */
+  transform: scale(0.9);
+  margin-inline-end: 8px;
+
+  .vibe-indicator {
+    /* Inside the list cards, the border of the dot should be white to match the card background */
+    border: 2px solid #ffffff !important; 
+    bottom: 0px !important;
+    right: 0px !important;
+  }
+  
+  .main-avatar {
+    /* Ensure the list avatar is clean */
+    border: none !important;
+    box-shadow: none !important;
+  }
+}
+
+/* Update your vibe-tag to use your exact variable values */
+.vibe-tag {
+ font-size: 0.55rem; 
+  padding: 2px 6px; 
+  border-radius: 4px; 
+  color: white; 
+  font-weight: 900;
+  text-transform: uppercase;
+
+  &.good  { background: #00b894; }
+  &.chill { background: #6c5ce7; }
+  &.busy  { background: #ff7675; }
+  &.gym   { background: #fdcb6e; }
+  &.sleep { background: #0984e3; } // NEW
 }

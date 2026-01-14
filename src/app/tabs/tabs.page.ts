@@ -15,6 +15,7 @@ import {
   person,
   settings,
   logOutOutline,
+  chatbubblesOutline,
 } from 'ionicons/icons';
 @Component({
   selector: 'app-tabs',
@@ -30,6 +31,7 @@ export class TabsPage {
       triangle,
       ellipse,
       square,
+      chatbubblesOutline,
       'chat-icon': chatbubbles, // Map 'chat-icon' to the chatbubbles SVG
       'profile-icon': person, // Map 'profile-icon' to the person SVG
       'settings-icon': settings, // Map 'settings-icon' to the settings SVG

@@ -33,7 +33,8 @@ import {
   cashOutline, // New for Money
   lockClosedOutline,
   checkboxOutline,
-  addOutline, // New for Vault
+  addOutline,
+  person, // New for Vault
 } from 'ionicons/icons';
 import { Supabase } from '../services/supabase';
 import { filter } from 'rxjs';
@@ -68,6 +69,7 @@ import { filter } from 'rxjs';
   ],
 })
 export class Tab1Page {
+  userProfile: any = null;
   searchResults: any[] = [];
   personalChats: any[] = [];
   selectedDate: string = new Date().toISOString();
@@ -81,7 +83,8 @@ export class Tab1Page {
       gitNetworkOutline,
       cashOutline,
       lockClosedOutline,
-      addOutline
+      addOutline,
+      'profile-icon': person,
     });
     // 2. LISTEN FOR NAVIGATION (This is the fix!)
     this.router.events
@@ -96,57 +99,89 @@ export class Tab1Page {
   }
 
   async ionViewWillEnter() {
-    // 1. Get the session quickly (Fixes the LockManager error)
+    // 1. Force a refresh of the user state
     const {
-      data: { session },
-    } = await this.supabase.client.auth.getSession();
-    this.currentUserId = session?.user?.id || '';
+      data: { user },
+      error,
+    } = await this.supabase.client.auth.getUser();
 
-    // 2. Only proceed if we actually have a user
-    if (this.currentUserId) {
-      await this.loadChats();
-      this.setupListPresence();
-    } else {
-      // If no session, send them back to login
-      this.router.navigate(['/login']);
+    if (error || !user) {
+      console.error('Auth error or no user:', error);
+      this.router.navigate(['/login'], { replaceUrl: true });
+      return;
     }
+
+    this.currentUserId = user.id;
+
+    // 2. Now that we are 100% sure we have a user, load the profile and chats
+    await Promise.all([this.fetchProfile(), this.loadChats()]);
+
+    this.setupListPresence();
   }
 
   async loadChats() {
     try {
-      const { data: memberships, error } =
-        await this.supabase.getPersonalRooms();
-      if (error) throw error;
+      // Use the ID we just verified in ionViewWillEnter
+      if (!this.currentUserId) return;
 
-      const chatPromises = (memberships || []).map(async (member: any) => {
+      // 1. Get my room memberships
+      const { data: myMemberships } = await this.supabase.client
+        .from('room_members')
+        .select('room_id')
+        .eq('user_id', this.currentUserId);
+
+      if (!myMemberships || myMemberships.length === 0) {
+        this.personalChats = [];
+        return;
+      }
+
+      // 2. Map through rooms to find the "Other Person" and their messages
+      const chatPromises = myMemberships.map(async (m: any) => {
+        // Find the member in this room who IS NOT ME
+        const { data: otherMember } = await this.supabase.client
+          .from('room_members')
+          .select(
+            `
+          user_id,
+          profiles:user_id (id, username, avatar_url, vibe)
+        `
+          )
+          .eq('room_id', m.room_id)
+          .neq('user_id', this.currentUserId)
+          .single();
+
+        if (!otherMember) return null;
+
+        // Get the latest message
         const { data: messages } = await this.supabase.getLatestMessage(
-          member.room_id
+          m.room_id
         );
-        const rawVibe = member.profiles?.vibe || 'good';
-        const msg = messages && messages.length > 0 ? messages[0] : null;
-
+        const latestMsg = messages?.[0];
+        const profile = otherMember.profiles;
+        // Inside your Tab 1 loadChats() loop:
+        // Use 'as any' or bracket notation if TypeScript complains
+        const rawVibe = (profile as any)?.vibe || 'good';
         return {
-          ...member,
-          lastMsgText: msg?.content || null,
-          lastMsgDate: msg?.created_at || null,
-          vibe: `vibe-${rawVibe}`,
+          room_id: m.room_id,
+          profiles: profile,
+          lastMsgText: latestMsg?.content || 'Start a conversation',
+          lastMsgDate: latestMsg?.created_at || null,
+          vibe: `vibe-${rawVibe}`, // This matches your SCSS classes like .vibe-good
           vibeLabel: rawVibe.toUpperCase(),
         };
       });
 
-      const updatedChats = await Promise.all(chatPromises);
+      const results = await Promise.all(chatPromises);
+      this.personalChats = results.filter((c) => c !== null);
 
-      // REMOVE the filter that checks for lastMsgDate !== null
-      // This ensures people appear even if no messages exist yet.
-      updatedChats.sort((a, b) => {
+      // Sort by date
+      this.personalChats.sort((a, b) => {
         const dateA = a.lastMsgDate ? new Date(a.lastMsgDate).getTime() : 0;
         const dateB = b.lastMsgDate ? new Date(b.lastMsgDate).getTime() : 0;
         return dateB - dateA;
       });
-
-      this.personalChats = [...updatedChats];
     } catch (err) {
-      console.error('Fetch Error:', err);
+      console.error('Final Fallback Load Error:', err);
     }
   }
 
@@ -297,5 +332,26 @@ export class Tab1Page {
     } else {
       console.error('Error deleting task:', error);
     }
+  }
+
+  async fetchProfile() {
+    const {
+      data: { session },
+    } = await this.supabase.client.auth.getSession();
+    if (session?.user) {
+      const { data, error } = await this.supabase.client
+        .from('profiles')
+        .select('*')
+        .eq('id', session.user.id)
+        .single();
+
+      if (!error && data) {
+        this.userProfile = { ...data, email: session.user.email };
+      }
+    }
+  }
+
+  goToProfile() {
+    this.router.navigate(['/tabs/tab2'], { replaceUrl: true });
   }
 }

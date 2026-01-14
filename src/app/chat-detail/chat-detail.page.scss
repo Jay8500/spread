@@ -3,9 +3,9 @@
   display: flex;
   flex-direction: column;
   padding: 10px;
-  /* This ensures the messages start from the bottom if there are only a few */
-  justify-content: flex-end; 
-  min-height: 100%;
+  /* Remove justify-content: flex-end; */
+  /* Add this instead to push messages to the bottom: */
+  margin-top: auto; 
 }
 
 /* Individual message wrapper */
@@ -76,4 +76,164 @@
   color: var(--ion-color-primary);
   font-style: italic;
   background: var(--ion-color-light);
+}
+
+
+.vibe-selector-bar {
+  display: flex;
+  justify-content: space-around;
+  padding: 8px;
+  background: #f8f9fa;
+  border-top: 1px solid #eee;
+  font-size: 0.85rem;
+  
+  span {
+    padding: 4px 10px;
+    border-radius: 12px;
+    background: white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    cursor: pointer;
+    transition: 0.2s;
+
+    &:active { transform: scale(0.9); }
+  }
+}
+
+/* Ensure the bubbles stand out against wallpapers */
+.message-me .bubble {
+  box-shadow: 0 2px 5px rgba(0,122,255,0.2);
+}
+
+.message-them .bubble {
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+ion-content {
+  /* 1. Make the default Ionic background transparent */
+  --background: transparent; 
+  
+  /* 2. Position the wallpaper correctly */
+  background-attachment: fixed;
+}
+
+.chat-overlay {
+  /* 3. This layer sits between the wallpaper and the text */
+  /* If you want the wallpaper to be bright, use a lower alpha (0.1) */
+  /* If you want messages to be easier to read, use a higher alpha (0.4) */
+  background: rgba(255, 255, 255, 0.2); 
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-container {
+  /* Ensure it fills the space so the background covers everything */
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 15px;
+  background: transparent; 
+}
+
+.vibe-text {
+  font-size: 0.7rem;
+  margin-left: 5px;
+  text-transform: capitalize;
+  opacity: 0.8;
+}
+
+/* Make the button look smaller/dimmed when disabled */
+ion-button[disabled] {
+  --opacity: 0.4;
+  transform: scale(0.9);
+  transition: all 0.3s ease;
+}
+
+.header-info {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+  span { font-size: 1rem; }
+}
+
+.video-grid {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: black;
+  z-index: 9999;
+
+  .remote-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .local-video {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 120px;
+    height: 160px;
+    border-radius: 15px;
+    border: 2px solid white;
+    object-fit: cover;
+    z-index: 10000;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+  }
+}
+
+.video-grid {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  background: #000;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .remote-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .local-video {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 100px;
+    height: 140px;
+    border-radius: 12px;
+    border: 2px solid #fff;
+    object-fit: cover;
+    z-index: 1000;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  }
+}
+
+.call-controls-bar {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 10px 30px;
+  border-radius: 50px;
+  backdrop-filter: blur(10px);
+  z-index: 10001;
+
+  ion-icon {
+    font-size: 24px;
+  }
+}
+
+.local-video.hidden {
+  opacity: 0;
 }

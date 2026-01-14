@@ -59,25 +59,23 @@ export class Supabase {
     const {
       data: { user },
     } = await this.client.auth.getUser();
+    if (!user) return { data: [], error: 'No user' };
 
-    const { data, error } = await this.client
+    // Just get the raw rows from room_members where I am a member
+    return await this.client
       .from('room_members')
-      .select(
-        `
-      room_id,
-      profiles!user_id!inner(username, avatar_url),
-      rooms!room_id!inner(is_group)
-    `
-      )
-      .eq('rooms.is_group', false)
-      .neq('user_id', user?.id);
-
-    if (error) {
-      console.error('Detailed DB Error:', error);
-    }
-    return { data, error };
+      .select('room_id, user_id')
+      .eq('user_id', user.id);
   }
 
+  // Add this helper to fetch a profile by ID (Safe Fallback)
+  async getProfileById(userId: string) {
+    return await this.client
+      .from('profiles')
+      .select('id, username, avatar_url, vibe')
+      .eq('id', userId)
+      .single();
+  }
   // Add this helper method to get messages for a specific room
   async getLatestMessage(roomId: string) {
     return await this.client
@@ -170,19 +168,30 @@ export class Supabase {
     return this.supabase.auth.onAuthStateChange(callback);
   }
 
-  // 2. The function to save the Notification Token to the database
   async updateFcmToken(token: string) {
+    // Use getSession instead of getUser for a quicker check
     const {
-      data: { user },
-    } = await this.client.auth.getUser();
-    if (!user) return;
+      data: { session },
+    } = await this.client.auth.getSession();
+
+    if (!session?.user) {
+      console.warn('FcmToken update deferred: No active session found.');
+      // Optional: Store token in LocalStorage and try again after login
+      localStorage.setItem('pending_fcm_token', token);
+      return;
+    }
 
     const { error } = await this.client
       .from('profiles')
       .update({ fcm_token: token })
-      .eq('id', user.id);
+      .eq('id', session.user.id);
 
-    if (error) console.error('Error updating FCM token:', error);
+    if (error) {
+      console.error('Error updating FCM token:', error);
+    } else {
+      console.log('FCM Token successfully synced to Supabase');
+      localStorage.removeItem('pending_fcm_token');
+    }
   }
 
   // Add to your SupabaseService class
@@ -215,11 +224,8 @@ export class Supabase {
   }
 
   async deleteTodo(todoId: string) {
-  const { error } = await this.client
-    .from('todos')
-    .delete()
-    .eq('id', todoId);
+    const { error } = await this.client.from('todos').delete().eq('id', todoId);
 
-  return { error };
-}
+    return { error };
+  }
 }

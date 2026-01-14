@@ -1,4 +1,12 @@
-import { Component, OnInit, OnDestroy, ViewChild, inject } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  ViewChild,
+  inject,
+  signal,
+  computed,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -14,10 +22,26 @@ import {
   IonBackButton,
   IonList,
   IonItem,
+  IonFab,
+  IonFabButton,
   IonLabel,
+  IonIcon,
 } from '@ionic/angular/standalone';
 import { Supabase } from '../services/supabase';
-
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
+import { Capacitor } from '@capacitor/core';
+import { addIcons } from 'ionicons';
+import {
+  imageOutline,
+  videocamOutline,
+  videocam,
+  mic,
+  micOff,
+  cameraReverse,
+  videocamOff,
+  call,
+} from 'ionicons/icons';
+import { Video } from '../video';
 @Component({
   selector: 'app-chat-detail',
   templateUrl: './chat-detail.page.html',
@@ -28,11 +52,15 @@ import { Supabase } from '../services/supabase';
     FormsModule,
     IonHeader,
     IonToolbar,
+    IonIcon,
     IonTitle,
     IonContent,
     IonFooter,
     IonInput,
+    // IonFab,
+    IonFabButton,
     IonButton,
+    // IonIcon,
     IonButtons,
     IonBackButton, // IonList, IonItem, IonLabel
   ],
@@ -47,7 +75,49 @@ export class ChatDetailPage implements OnInit {
   subscription: any;
   public router = inject(Router);
   isOtherTyping: boolean = false;
-  constructor(private route: ActivatedRoute, private supabase: Supabase) {}
+  public video = inject(Video);
+  // Signal for the remote user ID
+  friendId = signal<string>('');
+
+  public SOUNDS = {
+    // A subtle "pop" or "click" for sending
+    send: 'https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3',
+    // A gentle "ding" or "chirp" for receiving
+    received:
+      'https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3',
+    // A tiny "tap" sound for the button click itself
+    tap: 'https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3',
+  };
+
+  private sendAudio = new Audio(this.SOUNDS.send);
+  private receiveAudio = new Audio(this.SOUNDS.received);
+
+  // Helper to play sounds without lag
+  private playEffect(audio: HTMLAudioElement) {
+    audio.currentTime = 0; // Reset to start if already playing
+    audio.play().catch(() => {
+      // Browsers sometimes block audio until first user interaction
+      console.log('Audio playback waiting for user interaction');
+    });
+  }
+
+  friendProfile = signal<any>({ aura_status: 'good' });
+  canCall = computed(() => {
+    const profile = this.friendProfile();
+    return profile?.aura_status !== 'busy' && profile?.aura_status !== 'sad';
+  });
+  constructor(private route: ActivatedRoute, private supabase: Supabase) {
+    addIcons({
+      imageOutline,
+      videocamOutline,
+      videocam,
+      mic,
+      micOff,
+      cameraReverse,
+      videocamOff,
+      call,
+    });
+  }
 
   async ngOnInit() {
     // 1. Get the Room ID from the URL
@@ -63,12 +133,60 @@ export class ChatDetailPage implements OnInit {
     } = await this.supabase.client.auth.getUser();
     this.currentUserId = user?.id || '';
     console.log('Logged in as:', this.currentUserId);
+    this.video.initPeer(this.currentUserId);
 
+    // Fetch friend's ID from the room/conversation members
+    await this.getFriendDetails();
     // 3. Load the history
     await this.loadMessages();
 
     // 4. Listen for live updates
     this.setupRealtime();
+  }
+
+  async getFriendDetails() {
+    // 1. Find the other user's ID from the messages in this room
+    const { data: latestMsg } = await this.supabase.client
+      .from('messages')
+      .select('user_id')
+      .eq('room_id', this.roomId)
+      .neq('user_id', this.currentUserId) // Not me
+      .limit(1)
+      .single();
+
+    if (latestMsg) {
+      const fId = latestMsg.user_id;
+      this.friendId.set(fId);
+      console.log('Friend identified as:', fId);
+
+      // 2. Fetch their actual profile for the "Aura" and "Mood"
+      const { data: profile } = await this.supabase.client
+        .from('profiles')
+        .select('*')
+        .eq('id', fId)
+        .single();
+
+      if (profile) {
+        this.friendProfile.set(profile);
+      }
+
+      // 3. Optional: Listen for their vibe changes live
+      this.supabase.client
+        .channel(`vibe-${fId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'profiles',
+            filter: `id=eq.${fId}`,
+          },
+          (payload) => {
+            this.friendProfile.set(payload.new);
+          }
+        )
+        .subscribe();
+    }
   }
 
   async loadMessages() {
@@ -99,6 +217,9 @@ export class ChatDetailPage implements OnInit {
           if (!exists) {
             this.messages.push(payload.new);
             this.scrollToBottom();
+            if (payload.new.user_id !== this.currentUserId) {
+              this.playEffect(this.receiveAudio);
+            }
           }
         }
       )
@@ -136,11 +257,24 @@ export class ChatDetailPage implements OnInit {
     }
   }
 
+  // Default wallpaper (can be a color or an image URL)
+  public wallpaperUrl: string =
+    'https://www.transparenttextures.com/patterns/cubes.png';
+
+  // You could later save this to Supabase so it persists
+  setWallpaper(url: string) {
+    this.wallpaperUrl = url;
+  }
   async sendMessage() {
     if (!this.newMessage.trim()) return;
     const messageContent = this.newMessage;
     this.newMessage = '';
-
+    if (Capacitor.isNativePlatform()) {
+      Haptics.impact({ style: ImpactStyle.Light }).catch(() => {
+        // Silently fail if testing on a browser that doesn't support vibration
+      });
+    }
+    this.playEffect(this.sendAudio);
     // ADD THIS LINE: Force typing status to false immediately on send
     if (this.subscription) {
       this.subscription.track({ user_id: this.currentUserId, isTyping: false });
@@ -172,5 +306,82 @@ export class ChatDetailPage implements OnInit {
     setTimeout(() => {
       this.content.scrollToBottom(300);
     }, 100);
+  }
+
+  // Inside your class
+
+  async updateVibe(newVibe: string) {
+    const { error } = await this.supabase.client
+      .from('profiles')
+      .update({ vibe: newVibe })
+      .eq('id', this.currentUserId);
+
+    if (!error) {
+      // Play a tiny sound or haptic when vibe changes
+      Haptics.impact({ style: ImpactStyle.Light });
+      console.log('Vibe updated to:', newVibe);
+    }
+  }
+
+  changeWallpaper() {
+    const custom = prompt('Enter Image URL for Wallpaper:');
+    if (custom) {
+      this.wallpaperUrl = custom;
+      // Fastly store in local storage so it stays when you refresh
+      localStorage.setItem('chat-wallpaper', custom);
+    }
+  }
+
+  async startVideoCall() {
+    if (!this.canCall()) return;
+    this.playEffect(new Audio(this.SOUNDS.tap));
+
+    const target = this.friendId();
+    if (target) {
+      // 1. SAVE TO SUPABASE (This triggers the ringing on the other end)
+      const { data, error } = await this.supabase.client
+        .from('calls')
+        .insert({
+          caller_id: this.currentUserId,
+          receiver_id: target,
+          peer_id: this.currentUserId, // We use UserID as PeerID
+          status: 'ringing',
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Could not log the call:', error);
+        return;
+      }
+
+      // 2. START THE PEERJS STREAM
+      console.log('Initiating WebRTC call to:', target);
+      await this.video.callUser(target);
+    }
+  }
+  async endCall() {
+    this.playEffect(new Audio(this.SOUNDS.tap));
+
+    // 1. Stop local camera tracks
+    this.video
+      .localStream()
+      ?.getTracks()
+      .forEach((t) => t.stop());
+
+    // 2. Close the PeerJS call
+    if (this.video.currentCall) {
+      this.video.currentCall.close();
+    }
+
+    // 3. Reset UI
+    this.video.remoteStream.set(null);
+    this.video.localStream.set(null);
+
+    await this.supabase.client
+    .from('calls')
+    .update({ status: 'ended' })
+    .eq('caller_id', this.currentUserId)
+    .eq('status', 'ringing'); // Find the active call
   }
 }

@@ -1,0 +1,59 @@
+<ion-content color="light">
+  <div class="login-container">
+    <div class="brand-section">
+      <h1>Spread</h1>
+      <p>Create your account to get started.</p>
+    </div>
+
+    <div class="form-box">
+      <ion-input
+        label="Username"
+        label-placement="stacked"
+        type="text"
+        [(ngModel)]="username"
+        placeholder="@handle"
+        class="custom-input"
+      ></ion-input>
+
+      <ion-input
+        label="Email"
+        label-placement="stacked"
+        type="email"
+        [(ngModel)]="email"
+        placeholder="email@example.com"
+        class="custom-input"
+      ></ion-input>
+
+      <div class="password-wrapper">
+        <ion-input
+          label="Password"
+          label-placement="stacked"
+          [type]="showPassword ? 'text' : 'password'"
+          [(ngModel)]="password"
+          placeholder="*****"
+          class="custom-input"
+        ></ion-input>
+
+        <ion-button fill="clear" (click)="togglePassword()" class="eye-button-fixed">
+          <ion-icon [name]="showPassword ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
+        </ion-button>
+      </div>
+
+      <ion-button
+        expand="block"
+        (click)="handleSignup()"
+        class="auth-button"
+        [disabled]="isLoading"
+      >
+        <ion-spinner *ngIf="isLoading" name="crescent"></ion-spinner>
+        <span *ngIf="!isLoading">SIGN UP</span>
+      </ion-button>
+
+      <div class="ion-text-center">
+        <ion-button fill="clear" size="small" routerLink="/login" class="toggle-button">
+          Already have an account? Login
+        </ion-button>
+      </div>
+    </div>
+  </div>
+</ion-content>

@@ -47,16 +47,18 @@ export class LoginPage {
   }
 
   async handleAuth() {
+    // 1. Validation
     if (!this.email || !this.password)
       return alert('Please fill in all fields');
     if (this.isSignUp && !this.username)
       return alert('Please choose a username');
 
+    // 2. Start Loading
     this.isLoading = true;
 
     try {
       if (this.isSignUp) {
-        // --- SIGN UP ---
+        // --- SIGN UP LOGIC ---
         const { data, error } = await this.supabase.client.auth.signUp({
           email: this.email,
           password: this.password,
@@ -64,71 +66,72 @@ export class LoginPage {
         });
 
         if (error) throw error;
+        // 2. If user is created AND email confirmation is OFF, insert the profile
+        if (data?.user) {
+          const { error: profileError } = await this.supabase.client
+            .from('profiles')
+            .insert([
+              {
+                id: data.user.id,
+                username: this.username.toLowerCase(),
+                displayname: this.username.toLowerCase(),
+                email: this.email,
+                vibe: 'good', // Set a default vibe immediately!
+              },
+            ]);
 
-        if (data.user) {
-          await this.supabase.client.from('profiles').insert([
-            {
-              id: data.user.id,
-              username: this.username.toLowerCase(),
-              email: this.email,
-            },
-          ]);
+          if (profileError)
+            console.error('Error creating profile:', profileError);
         }
-
         alert('Account created! You can now login.');
-        this.isSignUp = false;
+        this.isSignUp = false; // Switch UI to Login mode
+        this.email = ''; // Clear fields
+        this.password = '';
       } else {
-        // 1. Prepare the input
+        // --- LOGIN LOGIC ---
         let input = (this.email.trim() || '').toLowerCase();
-        if (input.startsWith('@')) {
-          input = input.substring(1);
-        }
-        let finalEmail = input; // Default to what was typed
+        if (input.startsWith('@')) input = input.substring(1);
 
-        // 2. Lookup logic if it's a username (no @)
+        let finalEmail = input;
+
+        // Lookup email if user typed a username
         if (!input.includes('@')) {
           const { data: profile, error: profileError } =
             await this.supabase.client
               .from('profiles')
               .select('email')
-              .eq('username', input.toLowerCase())
+              .eq('username', input)
               .maybeSingle();
 
           if (profileError || !profile) {
-            this.isLoading = false;
-            return alert(`Username "${input}" not found.`);
+            throw new Error(`Username "${input}" not found.`);
           }
           finalEmail = profile.email;
-          console.log('Found email for login:', finalEmail);
         }
+
         const { error } = await this.supabase.client.auth.signInWithPassword({
           email: finalEmail,
           password: this.password,
         });
 
         if (error) throw error;
-        this.isLoading = false;
-        // Navigate only if successful
-        // setTimeout(() => {
-        //   this.router.navigateByUrl('/tabs/tab1', { replaceUrl: true });
-        // }, 100);
+
+        // SUCCESS: Navigate away
+        this.router.navigateByUrl('/tabs/tab1', { replaceUrl: true });
       }
     } catch (err: any) {
-      this.isLoading = false;
       alert(err.message);
     } finally {
-      // THIS IS THE KEY: This runs every single time,
-      // ensuring the "Authenticating" overlay turns off.
-      setTimeout(() => {
-        this.isLoading = false;
-      }, 200); // We add a 200ms delay to let the Ionic animation finish
+      // 3. ALWAYS stop loading at the very end
+      this.isLoading = false;
     }
-    this.isLoading = false;
   }
 
   toggleMode() {
+    // Force loading to false so buttons are clickable
+    this.isLoading = false;
     this.isSignUp = !this.isSignUp;
-    // Clear fields when switching for a better user experience
+    // Clear fields
     this.email = '';
     this.password = '';
     this.username = '';

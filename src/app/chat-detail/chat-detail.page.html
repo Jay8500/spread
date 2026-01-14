@@ -1,52 +1,78 @@
-<ion-header>
+<ion-header class="ion-no-border">
   <ion-toolbar color="primary">
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/tabs/tab1"></ion-back-button>
     </ion-buttons>
-    <ion-title>@{{ chatName }}</ion-title>
+
+    <!-- <ion-title>
+      <div class="header-info">
+        <span>@{{ chatName }}</span>
+        </div>
+    </ion-title> -->
+
+    <ion-title>
+      <div class="header-info">
+        <span>@{{ chatName }}</span>
+        @if(friendProfile()?.aura_status){
+        <small class="vibe-text"> • {{ friendProfile()?.aura_status }} </small>
+        }
+      </div>
+    </ion-title>
+
+    <ion-buttons slot="end">
+      <ion-button (click)="startVideoCall()" [disabled]="!canCall()">
+        <ion-icon
+          slot="icon-only"
+          [name]="canCall() ? 'videocam' : 'videocam-outline'"
+          [style.opacity]="canCall() ? '1' : '0.4'"
+        >
+        </ion-icon>
+      </ion-button>
+
+      <!-- <ion-button (click)="changeWallpaper()">
+        <ion-icon slot="icon-only" name="image-outline"></ion-icon>
+      </ion-button> -->
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
-<ion-content class="ion-padding">
-  <div class="chat-container">
-    @for (msg of messages; track $index) {
-    <div
-      class="message-row"
-      [class]="msg.user_id === currentUserId ? 'message-me' : 'message-them'"
-    >
-      <div class="bubble">{{ msg.content }}</div>
+
+<ion-content
+  [style.--background]="'url(' + wallpaperUrl + ') center/cover no-repeat fixed'"
+>
+  <div class="chat-overlay">
+    <div class="chat-container">
+      @for (msg of messages; track msg.id) {
+      <div
+        class="message-row"
+        [class]="msg.user_id === currentUserId ? 'message-me' : 'message-them'"
+      >
+        <div class="bubble">{{ msg.content }}</div>
+      </div>
+      }
     </div>
-    }
   </div>
 </ion-content>
+
 <ion-footer class="ion-no-border">
-  @if (isOtherTyping) {
-  <div
-    style="
-      padding: 5px 15px;
-      font-size: 0.8rem;
-      color: var(--ion-color-primary);
-      font-style: italic;
-    "
-  >
-    {{ chatName }} is typing...
+  <div class="vibe-selector-bar">
+    <span (click)="updateVibe('good')">😊 Good</span>
+    <span (click)="updateVibe('busy')">⏳ Busy</span>
+    <span (click)="updateVibe('focus')">🎧 Focus</span>
   </div>
+
+  @if (isOtherTyping) {
+  <div class="typing-notice">{{ chatName }} is typing...</div>
   }
+
   <ion-toolbar color="light">
-    <div style="display: flex; align-items: center; padding: 8px; gap: 8px">
+    <div class="chat-input-wrapper">
       <ion-input
         [(ngModel)]="newMessage"
         placeholder="Type a message..."
         (keyup.enter)="sendMessage()"
         (ionInput)="onTyping($event)"
-        style="
-          background: #fff;
-          border-radius: 20px;
-          --padding-start: 15px;
-          border: 1px solid #ddd;
-          flex: 1;
-        "
-      >
-      </ion-input>
+        class="chat-pill"
+      ></ion-input>
       <ion-button
         (click)="sendMessage()"
         [disabled]="!newMessage.trim()"
@@ -57,3 +83,49 @@
     </div>
   </ion-toolbar>
 </ion-footer>
+
+@if(video.remoteStream()){
+<div class="video-grid">
+  <video
+    [srcObject]="video.remoteStream()"
+    autoplay
+    playsinline
+    class="remote-video"
+  ></video>
+
+  <video
+    [srcObject]="video.localStream()"
+    autoplay
+    playsinline
+    muted
+    class="local-video"
+    [class.hidden]="video.isCameraOff()"
+  ></video>
+
+  <div class="call-controls-bar">
+    <ion-button fill="clear" (click)="video.toggleMute()">
+      <ion-icon
+        slot="icon-only"
+        [name]="video.isMuted() ? 'mic-off' : 'mic'"
+        [color]="video.isMuted() ? 'danger' : 'light'"
+      ></ion-icon>
+    </ion-button>
+
+    <ion-button fill="clear" (click)="video.flipCamera()">
+      <ion-icon slot="icon-only" name="camera-reverse" color="light"></ion-icon>
+    </ion-button>
+
+    <ion-fab-button color="danger" (click)="endCall()">
+      <ion-icon name="call"></ion-icon>
+    </ion-fab-button>
+
+    <ion-button fill="clear" (click)="video.toggleCamera()">
+      <ion-icon
+        slot="icon-only"
+        [name]="video.isCameraOff() ? 'videocam-off' : 'videocam'"
+        [color]="video.isCameraOff() ? 'danger' : 'light'"
+      ></ion-icon>
+    </ion-button>
+  </div>
+</div>
+}

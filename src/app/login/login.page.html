@@ -25,11 +25,11 @@
       }
 
       <ion-input
-        label="@spread"
+        label="@email"
         label-placement="stacked"
         type="text"
         [(ngModel)]="email"
-        placeholder="@spread"
+        placeholder="@email"
         class="custom-input"
       >
       </ion-input>
@@ -55,20 +55,26 @@
           ></ion-icon>
         </ion-button>
       </div>
-      <ion-button expand="block" (click)="handleAuth()" class="auth-button">
+
+      <ion-button
+        expand="block"
+        (click)="handleAuth()"
+        class="auth-button"
+        [disabled]="isLoading"
+      >
         @if (isLoading) {
         <ion-spinner name="crescent"></ion-spinner>
         } @else {
         <span>{{ isSignUp ? 'SIGN UP' : 'LOGIN' }}</span>
         }
       </ion-button>
-
       <div class="ion-text-center">
         <ion-button
           fill="clear"
           size="small"
           (click)="toggleMode()"
           class="toggle-button"
+          [disabled]="isLoading"
         >
           {{ isSignUp ? 'Already have an account? Login' : "Don't have an
           account? Sign Up" }}

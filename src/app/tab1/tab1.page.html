@@ -1,6 +1,25 @@
 <ion-header class="ion-no-border">
   <ion-toolbar color="primary">
-    <ion-title>Messages</ion-title>
+    <ion-title>
+      <div class="header-spread-wrapper">
+        <span class="title-text">Messages</span>
+
+        <div
+          class="header-avatar-wrapper"
+          [class]="userProfile?.vibe"
+          (click)="goToProfile()"
+        >
+          <ion-avatar class="main-avatar">
+            @if (userProfile?.avatar_url) {
+            <img [src]="userProfile.avatar_url" />
+            } @else {
+            <div class="initials">{{ getInitials(userProfile?.username) }}</div>
+            }
+          </ion-avatar>
+          <div class="vibe-indicator"></div>
+        </div>
+      </div>
+    </ion-title>
   </ion-toolbar>
 
   <ion-toolbar color="primary">
@@ -56,17 +75,24 @@
   <ion-list-header class="section-title">
     <ion-label>Search Results</ion-label>
   </ion-list-header>
-
   <ion-list lines="none" class="chat-list-container">
     @for (user of searchResults; track 'search-' + user.id) {
     <ion-item (click)="startChat(user.id)" [button]="true" class="chat-card">
-      <ion-avatar slot="start">
-        @if (user.avatar_url) {
-        <img [src]="user.avatar_url" />
-        } @else {
-        <div class="initials-avatar">{{ getInitials(user.username) }}</div>
-        }
-      </ion-avatar>
+      <div
+        slot="start"
+        class="header-avatar-wrapper list-avatar"
+        [class]="user.vibe || 'good'"
+      >
+        <ion-avatar class="main-avatar">
+          @if (user.avatar_url) {
+          <img [src]="user.avatar_url" />
+          } @else {
+          <div class="initials-avatar">{{ getInitials(user.username) }}</div>
+          }
+        </ion-avatar>
+        <div class="vibe-indicator"></div>
+      </div>
+
       <ion-label>
         <h2>@{{ user.username }}</h2>
         <p>{{ user.isExisting ? 'In your contacts' : 'New Connection' }}</p>
@@ -93,22 +119,28 @@
       detail="false"
       class="chat-card"
     >
-      <ion-avatar slot="start" [class]="chat.vibe">
-        @if (chat.profiles?.avatar_url) {
-        <img [src]="chat.profiles.avatar_url" />
-        } @else {
-        <div class="initials-avatar">
-          {{ getInitials(chat.profiles?.username) }}
-        </div>
-        }
-      </ion-avatar>
-
+      <div
+        slot="start"
+        class="header-avatar-wrapper list-avatar"
+        [class]="chat.profiles?.vibe || 'good'"
+      >
+        <ion-avatar class="main-avatar">
+          @if (chat.profiles?.avatar_url) {
+          <img [src]="chat.profiles.avatar_url" />
+          } @else {
+          <div class="initials-avatar">
+            {{ getInitials(chat.profiles?.username) }}
+          </div>
+          }
+        </ion-avatar>
+        <div class="vibe-indicator"></div>
+      </div>
       <ion-label>
         <div class="chat-label-container">
           <div class="name-row">
             <h2>
               @{{ chat.profiles?.username }} @if (chat.vibeLabel) {
-              <span class="vibe-tag" [class]="chat.vibe"
+              <span class="vibe-tag" [class]="chat.profiles?.vibe"
                 >{{ chat.vibeLabel }}</span
               >
               }
@@ -118,13 +150,11 @@
             }
           </div>
 
-          @if (typingStates[chat.room_id]) {
-          <p class="typing-text">typing...</p>
-          } @else {
           <p class="last-message">
-            {{ chat.lastMsgText || 'Start a conversation' }}
+            @if (typingStates[chat.room_id]) {
+            <i style="color: var(--ion-color-primary)">typing...</i>
+            } @else { {{ chat.lastMsgText }} }
           </p>
-          }
         </div>
       </ion-label>
     </ion-item>
@@ -173,7 +203,11 @@
                 ></ion-datetime-button>
               </ion-item>
 
-              <ion-button (click)="addNewTask()" class="add-btn-small">
+              <ion-button
+                (click)="addNewTask()"
+                class="add-btn-small"
+                [disabled]="[null,'',undefined].includes (newTask)"
+              >
                 <ion-icon name="add-outline"></ion-icon>
               </ion-button>
             </div>
