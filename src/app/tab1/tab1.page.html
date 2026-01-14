@@ -40,32 +40,6 @@
         </div>
         <span>To-Do</span>
       </div>
-      <div class="stuff-item" (click)="openMindMap()">
-        <div class="icon-circle">
-          <ion-icon
-            name="git-network-outline"
-            style="color: #6c5ce7"
-          ></ion-icon>
-        </div>
-        <span>Mind Map</span>
-      </div>
-
-      <div class="stuff-item" (click)="openMoney()">
-        <div class="icon-circle">
-          <ion-icon name="cash-outline" style="color: #00b894"></ion-icon>
-        </div>
-        <span>Money</span>
-      </div>
-
-      <div class="stuff-item" (click)="openVault()">
-        <div class="icon-circle">
-          <ion-icon
-            name="lock-closed-outline"
-            style="color: #ff7675"
-          ></ion-icon>
-        </div>
-        <span>Vault</span>
-      </div>
     </div>
   </ion-toolbar>
 </ion-header>
@@ -118,6 +92,7 @@
       [button]="true"
       detail="false"
       class="chat-card"
+      [disabled]="['sleep','busy'].includes(chat.profiles?.vibe)"
     >
       <div
         slot="start"
@@ -170,8 +145,9 @@
   <ion-modal
     [isOpen]="isTodoModalOpen"
     (didDismiss)="isTodoModalOpen = false"
-    [initialBreakpoint]="0.5"
-    [breakpoints]="[0, 0.5, 0.9]"
+    class="my-full-screen-modal"
+    [initialBreakpoint]="1"
+    [breakpoints]="[0, 1]"
     handleBehavior="cycle"
   >
     <ng-template>
@@ -196,11 +172,11 @@
                   [(ngModel)]="newTask"
                   (keyup.enter)="addNewTask()"
                 ></ion-input>
-
+                <!-- 
                 <ion-datetime-button
                   slot="end"
                   datetime="todo-picker"
-                ></ion-datetime-button>
+                ></ion-datetime-button> -->
               </ion-item>
 
               <ion-button

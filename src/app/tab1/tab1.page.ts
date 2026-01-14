@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NavigationEnd, Router } from '@angular/router';
@@ -34,7 +34,10 @@ import {
   lockClosedOutline,
   checkboxOutline,
   addOutline,
-  person, // New for Vault
+  person,
+  trashOutline,
+  timeOutline,
+  sparklesOutline, // New for Vault
 } from 'ionicons/icons';
 import { Supabase } from '../services/supabase';
 import { filter } from 'rxjs';
@@ -65,10 +68,11 @@ import { filter } from 'rxjs';
     IonInput, // For the newTask text
     IonCheckbox, // For the toggle status
     // IonDatetime, // For the schedule date
-    IonDatetimeButton, // For the trigger button
+    // IonDatetimeButton, // For the trigger button
   ],
 })
 export class Tab1Page {
+  @ViewChild('taskInput') taskInput!: IonInput;
   userProfile: any = null;
   searchResults: any[] = [];
   personalChats: any[] = [];
@@ -80,6 +84,9 @@ export class Tab1Page {
       checkboxOutline,
       chevronForwardOutline,
       searchOutline,
+      trashOutline,
+      timeOutline,
+      sparklesOutline,
       gitNetworkOutline,
       cashOutline,
       lockClosedOutline,
@@ -300,17 +307,19 @@ export class Tab1Page {
   isTodoModalOpen = false;
   newTask = '';
   todos: any = [];
+  
   async openTodoModal() {
     this.isTodoModalOpen = true;
+    setTimeout(() => {
+    this.taskInput.setFocus();
+  }, 400); // Wait for modal animation to finish
     // Refresh list every time modal opens to ensure it's up to date
     this.todos = await this.supabase.getTodos();
   }
 
   async addNewTask() {
     if (!this.newTask.trim()) return;
-
     const { data, error } = await this.supabase.addTodo(this.newTask);
-
     if (!error) {
       this.newTask = ''; // Clear input
       this.todos = await this.supabase.getTodos(); // Refresh list
@@ -324,7 +333,6 @@ export class Tab1Page {
 
   async deleteTodo(todoId: string) {
     const { error } = await this.supabase.deleteTodo(todoId);
-
     if (!error) {
       // Filter out the deleted todo from the local list for an instant UI update
       this.todos = this.todos.filter((t: any) => t.id !== todoId);

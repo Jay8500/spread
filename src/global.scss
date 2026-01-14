@@ -35,3 +35,23 @@
 /* @import "@ionic/angular/css/palettes/dark.always.css"; */
 /* @import "@ionic/angular/css/palettes/dark.class.css"; */
 // @import '@ionic/angular/css/palettes/dark.system.css';
+
+.my-full-screen-modal {
+  --height: 100%;
+  --width: 100%;
+  --border-radius: 0px;
+  
+  // Make the header blend with the status bar
+  ion-toolbar {
+    --padding-top: 20px;
+    --background: var(--ion-color-primary);
+    --color: white;
+  }
+
+  // Ensure content fills the space
+  .modal-wrapper {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+}
